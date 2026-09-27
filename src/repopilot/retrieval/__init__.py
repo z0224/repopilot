@@ -17,6 +17,16 @@ from .lexical import (
     tokenize,
 )
 
+from .semantic import (
+    DEFAULT_MODEL,
+    EmbeddingProvider,
+    SemanticRetrievalResult,
+    SemanticRetriever,
+    SentenceTransformerEmbedder,
+    chunk_embedding_text,
+    cosine_similarity,
+)
+
 __all__ = [
     "CodeChunk",
     "IndexBuildResult",
@@ -33,6 +43,13 @@ __all__ = [
     "evaluate_lexical_manifest",
     "evaluate_results",
     "unique_ranked_files",
+    "DEFAULT_MODEL",
+    "EmbeddingProvider",
+    "SemanticRetrievalResult",
+    "SemanticRetriever",
+    "SentenceTransformerEmbedder",
+    "chunk_embedding_text",
+    "cosine_similarity",
 ]
 
 from .evaluation import (
