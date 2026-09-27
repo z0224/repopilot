@@ -20,6 +20,7 @@ from .retrieval import (
     index_repository,
 )
 from .snapshot import start_baseline
+from .trajectory import parse_trajectory
 
 
 def positive_int(value):
@@ -225,6 +226,27 @@ def build_parser():
         help="Prepare context and command without running the agent.",
     )
 
+    trajectory_parser = subparsers.add_parser(
+        "inspect-trajectory",
+        help="Parse a trajectory into structured command events.",
+    )
+    trajectory_parser.add_argument(
+        "trajectory",
+        help="Path to a mini-SWE-agent trajectory JSON file.",
+    )
+    trajectory_parser.add_argument(
+        "--output",
+        help=(
+            "Structured JSON output path. Defaults to "
+            "TRAJECTORY.events.json."
+        ),
+    )
+    trajectory_parser.add_argument(
+        "--include-output",
+        action="store_true",
+        help="Include complete command output in the report.",
+    )
+
     evaluation_parser = subparsers.add_parser(
         "evaluate-retrieval",
         help="Evaluate lexical retrieval from a manifest.",
@@ -254,6 +276,76 @@ def build_parser():
 
 def main():
     arguments = build_parser().parse_args()
+
+    if arguments.command == "inspect-trajectory":
+        trajectory = parse_trajectory(
+            arguments.trajectory
+        )
+        payload = trajectory.to_dict()
+
+        if not arguments.include_output:
+            for event in payload["events"]:
+                output = event.pop("output")
+                event["output_length"] = len(output)
+                event["output_preview"] = output[:500]
+
+        source_path = Path(
+            arguments.trajectory
+        ).expanduser().resolve()
+
+        if arguments.output:
+            output_path = Path(
+                arguments.output
+            ).expanduser().resolve()
+        else:
+            output_path = source_path.with_name(
+                source_path.stem
+                + ".events.json"
+            )
+
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        output_path.write_text(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        statuses = {}
+
+        for event in trajectory.events:
+            statuses[event.status] = (
+                statuses.get(event.status, 0) + 1
+            )
+
+        print(
+            f"Trajectory format: "
+            f"{trajectory.trajectory_format}"
+        )
+        print(f"Model: {trajectory.model}")
+        print(f"Exit status: {trajectory.exit_status}")
+        print(f"API calls: {trajectory.api_calls}")
+        print(f"Cost: {trajectory.cost}")
+        print(f"Command events: {len(trajectory.events)}")
+
+        for status in (
+            "succeeded",
+            "failed",
+            "not_executed",
+            "attempted",
+        ):
+            print(
+                f"{status}: "
+                f"{statuses.get(status, 0)}"
+            )
+
+        print(f"Events saved to: {output_path}")
+        return
 
     if arguments.command == "run":
         project_path = Path(

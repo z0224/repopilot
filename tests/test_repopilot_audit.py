@@ -276,3 +276,114 @@ def test_recognizes_targeted_perl_substitution(tmp_path):
         result["targeted_rewrite_operations"][0]["operation_type"]
         == "targeted_perl_substitution"
     )
+
+
+def test_audit_links_command_returncode_and_paths(
+    tmp_path,
+):
+    trajectory = {
+        "trajectory_format": "mini-swe-agent-v2",
+        "info": {
+            "exit_status": "Submitted",
+        },
+        "messages": [
+            {
+                "created_at": 100.0,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": "bash",
+                        "call_id": "call-edit",
+                        "arguments": json.dumps({
+                            "command": (
+                                "sed -i 's/old/new/' "
+                                "src/service.py"
+                            ),
+                        }),
+                    }
+                ],
+            },
+            {
+                "type": "function_call_output",
+                "call_id": "call-edit",
+                "extra": {
+                    "returncode": 0,
+                    "raw_output": "",
+                    "timestamp": 101.0,
+                },
+            },
+        ],
+    }
+
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+    event = result["command_events"][0]
+
+    assert result["commands_checked"] == 1
+    assert result["event_status_counts"] == {
+        "succeeded": 1,
+    }
+    assert event["status"] == "succeeded"
+    assert event["returncode"] == 0
+    assert event["paths"] == [
+        {
+            "path": "src/service.py",
+            "category": "source",
+        }
+    ]
+
+
+def test_unexecuted_write_is_not_a_real_operation(
+    tmp_path,
+):
+    trajectory = {
+        "messages": [
+            {
+                "created_at": 100.0,
+                "output": [
+                    {
+                        "type": "function_call",
+                        "name": "bash",
+                        "call_id": "call-write",
+                        "arguments": json.dumps({
+                            "command": (
+                                "cat > service.py <<'EOF'\n"
+                                "value = 1\n"
+                                "EOF"
+                            ),
+                        }),
+                    }
+                ],
+            },
+            {
+                "type": "function_call_output",
+                "call_id": "call-write",
+                "extra": {
+                    "returncode": -1,
+                    "raw_output": "",
+                    "exception_info": (
+                        "action was not executed"
+                    ),
+                    "timestamp": 101.0,
+                },
+            },
+        ],
+    }
+
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+
+    assert result["command_events"][0]["status"] == (
+        "not_executed"
+    )
+    assert result["overwrite_operations"] == []

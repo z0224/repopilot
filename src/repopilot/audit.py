@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 from .snapshot import collect_files, run_test_command
+from .trajectory import parse_trajectory
 
 
 OVERWRITE_PATTERNS = {
@@ -141,56 +142,16 @@ def compare_files(before_files, after_files):
     return changes
 
 
-def extract_action_command(action):
-    if not isinstance(action, dict):
-        return None
-
-    if isinstance(action.get("command"), str):
-        return action["command"]
-
-    for key in ("arguments", "args", "input"):
-        value = action.get(key)
-
-        if isinstance(value, dict) and isinstance(value.get("command"), str):
-            return value["command"]
-
-    return None
-
-
-def collect_trajectory_commands(node):
-    commands = []
-
-    if isinstance(node, dict):
-        extra = node.get("extra")
-
-        if isinstance(extra, dict):
-            actions = extra.get("actions", [])
-
-            if isinstance(actions, dict):
-                actions = [actions]
-
-            if isinstance(actions, list):
-                for action in actions:
-                    command = extract_action_command(action)
-
-                    if command:
-                        commands.append(command)
-
-        for value in node.values():
-            commands.extend(collect_trajectory_commands(value))
-
-    elif isinstance(node, list):
-        for item in node:
-            commands.extend(collect_trajectory_commands(item))
-
-    return commands
-
 
 def audit_trajectory(trajectory_path):
     if trajectory_path is None:
         return {
             "trajectory_provided": False,
+            "trajectory_format": None,
+            "exit_status": None,
             "commands_checked": 0,
+            "event_status_counts": {},
+            "command_events": [],
             "overwrite_operations": [],
             "targeted_rewrite_operations": [],
             "temporary_file_operations": [],
@@ -201,13 +162,18 @@ def audit_trajectory(trajectory_path):
     if not path.is_file():
         raise SystemExit(f"Trajectory file does not exist: {path}")
 
-    trajectory = json.loads(path.read_text(encoding="utf-8"))
-    commands = collect_trajectory_commands(trajectory)
+    parsed = parse_trajectory(path)
+    events = parsed.events
     overwrite_operations = []
     targeted_rewrite_operations = []
     temporary_file_operations = []
 
-    for index, command in enumerate(commands, start=1):
+    for event in events:
+        if event.status == "not_executed":
+            continue
+
+        index = event.index
+        command = event.command
         write_text_type = classify_write_text(command)
 
         if write_text_type == "targeted_write_text":
@@ -263,9 +229,35 @@ def audit_trajectory(trajectory_path):
                 }
             )
 
+    status_counts = {}
+
+    for event in events:
+        status_counts[event.status] = (
+            status_counts.get(event.status, 0) + 1
+        )
+
+    command_events = [
+        {
+            "index": event.index,
+            "call_id": event.call_id,
+            "status": event.status,
+            "returncode": event.returncode,
+            "exception_info": event.exception_info,
+            "paths": [
+                reference.to_dict()
+                for reference in event.paths
+            ],
+        }
+        for event in events
+    ]
+
     return {
         "trajectory_provided": True,
-        "commands_checked": len(commands),
+        "trajectory_format": parsed.trajectory_format,
+        "exit_status": parsed.exit_status,
+        "commands_checked": len(events),
+        "event_status_counts": status_counts,
+        "command_events": command_events,
         "overwrite_operations": overwrite_operations,
         "targeted_rewrite_operations": targeted_rewrite_operations,
         "temporary_file_operations": temporary_file_operations,
@@ -301,7 +293,7 @@ def verify(project_path, test_command, trajectory_path):
     )
 
     report = {
-        "schema_version": 5,
+        "schema_version": 6,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,

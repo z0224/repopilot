@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "project": "/tmp/repopilot-task-005-rag-safe-2A05Fx",
   "accepted": true,
   "changes": [
@@ -13,7 +13,99 @@
   "changed_test_files": [],
   "trajectory_audit": {
     "trajectory_provided": true,
+    "trajectory_format": "mini-swe-agent-1.1",
+    "exit_status": "Submitted",
     "commands_checked": 6,
+    "event_status_counts": {
+      "failed": 3,
+      "succeeded": 2,
+      "not_executed": 1
+    },
+    "command_events": [
+      {
+        "index": 1,
+        "call_id": "call_E6LMAakdl1ExfFyUv3dSbRtl",
+        "status": "failed",
+        "returncode": 2,
+        "exception_info": null,
+        "paths": []
+      },
+      {
+        "index": 2,
+        "call_id": "call_wpCl570xo0fWy9l61SsYWkI7",
+        "status": "failed",
+        "returncode": 128,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "inventory/service.py",
+            "category": "source"
+          },
+          {
+            "path": "inventory/repository.py",
+            "category": "source"
+          },
+          {
+            "path": "inventory/errors.py",
+            "category": "source"
+          },
+          {
+            "path": "tests/test_inventory_service.py",
+            "category": "test"
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "call_id": "call_4DOY25EvS32VfJLqsnIv4sfX",
+        "status": "failed",
+        "returncode": 1,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "pyproject.toml",
+            "category": "other"
+          },
+          {
+            "path": "pytest.ini",
+            "category": "other"
+          },
+          {
+            "path": "setup.cfg",
+            "category": "other"
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "call_id": "call_5xjL9Fq4b6eit3C0aQqyonkI",
+        "status": "succeeded",
+        "returncode": 0,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "inventory/service.py",
+            "category": "source"
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "call_id": "call_iIraqjr6eMS7C1n1yWl8Rzle",
+        "status": "succeeded",
+        "returncode": 0,
+        "exception_info": null,
+        "paths": []
+      },
+      {
+        "index": 6,
+        "call_id": "call_sXE8NHtL1QTWYK5CQjeLeI4w",
+        "status": "not_executed",
+        "returncode": -1,
+        "exception_info": "action was not executed",
+        "paths": []
+      }
+    ],
     "overwrite_operations": [],
     "targeted_rewrite_operations": [
       {
@@ -27,7 +119,7 @@
   "final_test": {
     "command": "python -m pytest -q",
     "returncode": 0,
-    "duration_seconds": 0.1467,
+    "duration_seconds": 0.1456,
     "stdout": ".....                                                                    [100%]\n5 passed in 0.00s\n",
     "stderr": ""
   }
