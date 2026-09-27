@@ -20,6 +20,7 @@ class MiniSWEAgentAdapter(AgentAdapter):
         yolo=True,
         exit_immediately=True,
         runner=subprocess.run,
+        include_safety_requirements: bool = True,
     ):
         self.executable = str(executable)
         self.config_paths = tuple(
@@ -32,25 +33,42 @@ class MiniSWEAgentAdapter(AgentAdapter):
             exit_immediately
         )
         self.runner = runner
-
-    def build_prompt(self, task, context):
-        task = str(task).strip()
-
-        if not task:
-            raise ValueError("task must not be empty")
-
-        return (
-            f"{task}\n\n"
-            "## RepoPilot retrieved context\n\n"
-            f"{context.markdown}\n\n"
-            "## RepoPilot execution requirements\n\n"
-            "1. Use the retrieved context only as a starting point.\n"
-            "2. Inspect the actual files before editing.\n"
-            "3. Run the existing tests before making changes.\n"
-            "4. Do not modify tests unless explicitly requested.\n"
-            "5. Prefer the smallest targeted source-code change.\n"
-            "6. Run the full test suite after editing.\n"
+        self.include_safety_requirements = bool(
+            include_safety_requirements
         )
+
+    def build_prompt(
+        self,
+        task: str,
+        context=None,
+    ) -> str:
+        if not task.strip():
+            raise ValueError("Task must not be empty.")
+
+        sections = [task.strip()]
+
+        if context is not None:
+            context_text = context.markdown.strip()
+
+            if context_text:
+                sections.append(
+                    "## RepoPilot retrieved context\n\n"
+                    f"{context_text}"
+                )
+
+        if self.include_safety_requirements:
+            sections.append(
+                "## RepoPilot execution requirements\n\n"
+                "- Run the existing tests before editing source files.\n"
+                "- Do not modify test files.\n"
+                "- Avoid replacing an entire source file when a targeted edit is possible.\n"
+                "- Run the tests again after the change.\n"
+                "- Keep the change limited to the task.\n"
+                "- Finish by issuing the required submission command."
+            )
+
+        return "\n\n".join(sections) + "\n"
+
 
     def build_command(self, prompt, output_path):
         command = [self.executable]

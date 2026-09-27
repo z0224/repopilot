@@ -118,3 +118,18 @@ def test_nonzero_agent_exit_is_preserved(tmp_path):
     assert result.returncode == 2
     assert result.stderr == "agent failed"
     assert result.to_dict()["succeeded"] is False
+
+
+def test_can_disable_rag_and_safe_prompt():
+    adapter = MiniSWEAgentAdapter(
+        include_safety_requirements=False,
+    )
+
+    prompt = adapter.build_prompt(
+        "Fix the incorrect total calculation.",
+        None,
+    )
+
+    assert prompt.strip() == "Fix the incorrect total calculation."
+    assert "retrieved context" not in prompt
+    assert "execution requirements" not in prompt
