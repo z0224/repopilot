@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "task-001",
+      "project": "task-001",
+      "query": "calculator add addition incorrect result test",
+      "relevant_files": [
+        "calculator.py",
+        "test_calculator.py"
+      ]
+    },
+    {
+      "id": "task-002",
+      "project": "task-002",
+      "query": "safe divide division by zero return none",
+      "relevant_files": [
+        "safe_divide.py",
+        "test_safe_divide.py"
+      ]
+    },
+    {
+      "id": "task-003",
+      "project": "task-003",
+      "query": "checkout discount percentage price format currency",
+      "relevant_files": [
+        "pricing.py",
+        "order_service.py",
+        "test_order_service.py"
+      ]
+    },
+    {
+      "id": "task-004",
+      "project": "task-004",
+      "query": "average score ignore missing none records data cleaner",
+      "relevant_files": [
+        "data_cleaner.py",
+        "report_service.py",
+        "test_report_service.py"
+      ]
+    },
+    {
+      "id": "task-005",
+      "project": "task-005",
+      "query": "duplicate sku atomic inventory reservation insufficient stock",
+      "relevant_files": [
+        "inventory/service.py",
+        "inventory/repository.py",
+        "inventory/errors.py",
+        "tests/test_inventory_service.py"
+      ]
+    }
+  ]
+}

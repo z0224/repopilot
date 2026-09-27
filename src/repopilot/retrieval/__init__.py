@@ -28,4 +28,17 @@ __all__ = [
     "index_repository",
     "search_chunks",
     "tokenize",
+    "RetrievalEvaluation",
+    "aggregate_evaluations",
+    "evaluate_lexical_manifest",
+    "evaluate_results",
+    "unique_ranked_files",
 ]
+
+from .evaluation import (
+    RetrievalEvaluation,
+    aggregate_evaluations,
+    evaluate_lexical_manifest,
+    evaluate_results,
+    unique_ranked_files,
+)
