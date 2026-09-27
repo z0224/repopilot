@@ -6,8 +6,11 @@ from pathlib import Path
 
 from .audit import verify
 from .retrieval import (
+    DEFAULT_MODEL,
     LexicalRetriever,
+    SentenceTransformerEmbedder,
     evaluate_lexical_manifest,
+    evaluate_semantic_manifest,
     index_repository,
 )
 from .snapshot import start_baseline
@@ -121,6 +124,17 @@ def build_parser():
         "--output",
         help="Optional JSON report output path.",
     )
+    evaluation_parser.add_argument(
+        "--retriever",
+        choices=("lexical", "semantic"),
+        default="lexical",
+        help="Retrieval implementation to evaluate.",
+    )
+    evaluation_parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="Sentence-transformers model for semantic retrieval.",
+    )
 
     return parser
 
@@ -129,9 +143,18 @@ def main():
     arguments = build_parser().parse_args()
 
     if arguments.command == "evaluate-retrieval":
-        report = evaluate_lexical_manifest(
-            arguments.manifest
-        )
+        if arguments.retriever == "semantic":
+            embedder = SentenceTransformerEmbedder(
+                model_name=arguments.model,
+            )
+            report = evaluate_semantic_manifest(
+                arguments.manifest,
+                embedder=embedder,
+            )
+        else:
+            report = evaluate_lexical_manifest(
+                arguments.manifest
+            )
         serialized = json.dumps(
             report,
             ensure_ascii=False,

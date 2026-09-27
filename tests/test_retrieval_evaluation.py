@@ -129,3 +129,76 @@ def test_rejects_empty_relevant_files():
             relevant_files=[],
             results=[],
         )
+
+
+class FakeCrossLanguageEmbedder:
+    model_name = "fake-cross-language"
+
+    def encode(self, texts):
+        vectors = []
+
+        for text in texts:
+            lowered = text.lower()
+
+            inventory = (
+                "inventory" in lowered
+                or "库存" in lowered
+                or "预留" in lowered
+            )
+            atomic = (
+                "atomic" in lowered
+                or "原子" in lowered
+            )
+
+            vectors.append([
+                float(inventory),
+                float(atomic),
+            ])
+
+        return vectors
+
+
+def test_evaluates_semantic_manifest(tmp_path):
+    benchmark_root = tmp_path / "benchmarks"
+    project = benchmark_root / "task-001"
+    project.mkdir(parents=True)
+
+    (project / "inventory.py").write_text(
+        '''def reserve_inventory(items):
+    """Atomically reserve inventory."""
+    return items
+''',
+        encoding="utf-8",
+    )
+
+    manifest = benchmark_root / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "id": "task-001",
+                        "project": "task-001",
+                        "query": "库存预留必须具有原子性",
+                        "relevant_files": [
+                            "inventory.py"
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    from repopilot.retrieval import (
+        evaluate_semantic_manifest,
+    )
+
+    report = evaluate_semantic_manifest(
+        manifest,
+        embedder=FakeCrossLanguageEmbedder(),
+    )
+
+    assert report["retriever"] == "semantic"
+    assert report["model"] == "fake-cross-language"
+    assert report["aggregate"]["mean_recall_at"]["1"] == 1.0

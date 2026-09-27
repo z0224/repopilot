@@ -41,6 +41,7 @@ __all__ = [
     "RetrievalEvaluation",
     "aggregate_evaluations",
     "evaluate_lexical_manifest",
+    "evaluate_semantic_manifest",
     "evaluate_results",
     "unique_ranked_files",
     "DEFAULT_MODEL",
@@ -56,6 +57,7 @@ from .evaluation import (
     RetrievalEvaluation,
     aggregate_evaluations,
     evaluate_lexical_manifest,
+    evaluate_semantic_manifest,
     evaluate_results,
     unique_ranked_files,
 )
