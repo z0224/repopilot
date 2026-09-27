@@ -1,0 +1,12 @@
+policy:
+  name: balanced
+  require_baseline_test: true
+  require_final_test_pass: true
+  forbid_test_changes: true
+  forbid_full_file_overwrite: true
+  allow_temporary_files: true
+  require_agent_submission: false
+  warn_on_failed_commands: true
+  max_changed_files: 5
+  max_added_lines: 100
+  max_deleted_lines: 100

@@ -387,3 +387,132 @@ def test_unexecuted_write_is_not_a_real_operation(
         "not_executed"
     )
     assert result["overwrite_operations"] == []
+def test_verify_applies_yaml_policy(
+    tmp_path,
+    monkeypatch,
+):
+    from repopilot.audit import verify
+
+    project = tmp_path / "project"
+    project.mkdir()
+
+    state = project / ".repopilot"
+    state.mkdir()
+
+    old_source = "def run():\n    return False\n"
+    new_source = "def run():\n    return True\n"
+
+    (project / "service.py").write_text(
+        new_source,
+        encoding="utf-8",
+    )
+
+    baseline = {
+        "files": {
+            "service.py": file_record(old_source),
+        },
+        "baseline_test": {
+            "returncode": 1,
+        },
+    }
+    (state / "baseline.json").write_text(
+        json.dumps(baseline),
+        encoding="utf-8",
+    )
+
+    policy_path = tmp_path / "policy.yaml"
+    policy_path.write_text(
+        """
+policy:
+  name: integration-test
+  require_baseline_test: true
+  require_final_test_pass: true
+  forbid_test_changes: true
+  forbid_full_file_overwrite: true
+  allow_temporary_files: true
+  require_agent_submission: false
+  max_changed_files: 0
+  max_added_lines: 100
+  max_deleted_lines: 100
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "repopilot.audit.run_test_command",
+        lambda project, command: {
+            "command": command,
+            "returncode": 0,
+            "duration_seconds": 0.01,
+            "stdout": "1 passed",
+            "stderr": "",
+        },
+    )
+
+    report = verify(
+        project,
+        "python -m pytest -q",
+        None,
+        policy_path,
+    )
+
+    assert report["schema_version"] == 7
+    assert report["accepted"] is False
+    assert report["policy"]["policy_name"] == (
+        "integration-test"
+    )
+    assert report["policy"]["rejection_reasons"] == [
+        "max_changed_files limit must not be exceeded."
+    ]
+
+
+def test_verify_default_policy_is_backward_compatible(
+    tmp_path,
+    monkeypatch,
+):
+    from repopilot.audit import verify
+
+    project = tmp_path / "project"
+    project.mkdir()
+
+    state = project / ".repopilot"
+    state.mkdir()
+
+    old_source = "value = 1\n"
+    new_source = "value = 2\n"
+
+    (project / "service.py").write_text(
+        new_source,
+        encoding="utf-8",
+    )
+    (state / "baseline.json").write_text(
+        json.dumps({
+            "files": {
+                "service.py": file_record(old_source),
+            },
+            "baseline_test": {
+                "returncode": 1,
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "repopilot.audit.run_test_command",
+        lambda project, command: {
+            "command": command,
+            "returncode": 0,
+            "duration_seconds": 0.01,
+            "stdout": "1 passed",
+            "stderr": "",
+        },
+    )
+
+    report = verify(
+        project,
+        "python -m pytest -q",
+        None,
+    )
+
+    assert report["accepted"] is True
+    assert report["policy"]["policy_name"] == "default"

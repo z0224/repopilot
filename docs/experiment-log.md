@@ -297,3 +297,29 @@ Agent 将原有的边验证边修改流程改为三阶段处理：
 - 实验工作区位于 `/tmp`，不是 Git 仓库，因此 Agent 的一次 `git status` 检查失败。
 - 完成标记命令在 trajectory 中记录为 `action was not executed`，但 mini-SWE-agent 最终状态为 `Submitted`，RepoPilot 独立验收通过。
 - 单个成功任务不能证明 RAG 提高了修复成功率，后续需要运行 Baseline、Safe、RAG、RAG + Safe 四组批量实验。
+
+
+
+## YAML 策略对照：Task 005 RAG + Safe
+
+同一份 Agent 修改结果分别使用 Strict 和 Balanced 策略进行确定性评估。
+
+| 规则 | Strict | Balanced | 实际结果 |
+|---|---:|---:|---:|
+| 最大修改文件数 | 3 | 5 | 1 |
+| 最大新增行数 | 50 | 100 | 6 |
+| 最大删除行数 | 50 | 100 | 1 |
+| 允许临时文件 | 否 | 是 | 0 次 |
+| 要求 Agent Submitted | 是 | 否 | Submitted |
+| 最终决策 | ACCEPT | ACCEPT | — |
+
+两套策略均检测到 3 个失败命令，但该规则的严重级别为 `warning`，因此不会覆盖已经通过的确定性验收条件。
+
+实验说明：
+
+- 策略决策不依赖 LLM；
+- 每条规则都输出 PASS、FAIL 或 WARNING；
+- 一次运行可以使用不同策略重新评估；
+- 拒绝原因支持同时返回多条；
+- 验收报告 schema 已升级到版本 7。
+

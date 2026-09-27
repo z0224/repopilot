@@ -79,6 +79,10 @@ def build_parser():
         "--trajectory",
         help="Path to the mini-SWE-agent trajectory.",
     )
+    verify_parser.add_argument(
+        "--policy",
+        help="Path to a RepoPilot YAML policy.",
+    )
 
     index_parser = subparsers.add_parser(
         "index",
@@ -710,6 +714,7 @@ def main():
             arguments.project,
             arguments.test_command,
             arguments.trajectory,
+            arguments.policy,
         )
 
 

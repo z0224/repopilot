@@ -6,6 +6,11 @@ import re
 from difflib import SequenceMatcher
 from pathlib import Path
 
+from .policy import (
+    PolicyConfig,
+    evaluate_policy,
+    load_policy,
+)
 from .snapshot import collect_files, run_test_command
 from .trajectory import parse_trajectory
 
@@ -264,7 +269,12 @@ def audit_trajectory(trajectory_path):
     }
 
 
-def verify(project_path, test_command, trajectory_path):
+def verify(
+    project_path,
+    test_command,
+    trajectory_path,
+    policy_path=None,
+):
     project = Path(project_path).expanduser().resolve()
     baseline_path = project / ".repopilot" / "baseline.json"
 
@@ -286,20 +296,43 @@ def verify(project_path, test_command, trajectory_path):
     trajectory_audit = audit_trajectory(trajectory_path)
     final_test = run_test_command(project, test_command)
 
-    accepted = (
-        final_test["returncode"] == 0
-        and not changed_test_files
-        and not trajectory_audit["overwrite_operations"]
+    if policy_path:
+        policy = load_policy(policy_path)
+    else:
+        # Preserve the original verification behavior when no
+        # explicit policy is provided.
+        policy = PolicyConfig(
+            name="default",
+            require_agent_submission=False,
+            max_changed_files=None,
+            max_added_lines=None,
+            max_deleted_lines=None,
+        )
+
+    policy_evaluation = evaluate_policy(
+        policy,
+        {
+            "baseline_test": baseline.get(
+                "baseline_test"
+            ),
+            "final_test": final_test,
+            "changes": changes,
+            "changed_test_files": changed_test_files,
+            "trajectory_audit": trajectory_audit,
+        },
     )
+    accepted = policy_evaluation.accepted
 
     report = {
-        "schema_version": 6,
+        "schema_version": 7,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,
         "changed_test_files": changed_test_files,
         "trajectory_audit": trajectory_audit,
+        "baseline_test": baseline.get("baseline_test"),
         "final_test": final_test,
+        "policy": policy_evaluation.to_dict(),
     }
 
     report_path = project / ".repopilot" / "report.json"
@@ -309,7 +342,24 @@ def verify(project_path, test_command, trajectory_path):
     )
 
     print(f"Report saved to: {report_path}")
+    print(f"Policy: {policy_evaluation.policy_name}")
     print(f"Accepted: {accepted}")
+
+    for rule in policy_evaluation.rules:
+        if rule.passed:
+            marker = "PASS"
+        elif rule.severity == "warning":
+            marker = "WARNING"
+        else:
+            marker = "FAIL"
+
+        print(
+            f"[{marker}] {rule.rule}: "
+            f"{rule.message} "
+            f"(actual={rule.actual!r}, "
+            f"expected={rule.expected!r})"
+        )
+
     print(f"Changed files: {len(changes)}")
     print(f"Changed test files: {len(changed_test_files)}")
     print(
@@ -330,6 +380,8 @@ def verify(project_path, test_command, trajectory_path):
         print("\nTest stdout:")
         print(final_test["stdout"])
 
+    return report
+
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -344,6 +396,10 @@ def build_parser():
         "--trajectory",
         help="Path to a mini-SWE-agent trajectory JSON file.",
     )
+    parser.add_argument(
+        "--policy",
+        help="Path to a RepoPilot YAML policy.",
+    )
 
     return parser
 
@@ -355,6 +411,7 @@ def main():
         arguments.project,
         arguments.test_command,
         arguments.trajectory,
+        arguments.policy,
     )
 
 

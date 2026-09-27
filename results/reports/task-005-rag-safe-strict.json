@@ -126,12 +126,12 @@
   "final_test": {
     "command": "python -m pytest -q",
     "returncode": 0,
-    "duration_seconds": 0.1351,
+    "duration_seconds": 0.156,
     "stdout": ".....                                                                    [100%]\n5 passed in 0.00s\n",
     "stderr": ""
   },
   "policy": {
-    "policy_name": "balanced",
+    "policy_name": "strict",
     "accepted": true,
     "rejection_reasons": [],
     "rules": [
@@ -170,10 +170,10 @@
       {
         "rule": "allow_temporary_files",
         "passed": true,
-        "severity": "info",
+        "severity": "error",
         "message": "Temporary file operations follow policy.",
         "actual": 0,
-        "expected": "allowed"
+        "expected": 0
       },
       {
         "rule": "max_changed_files",
@@ -181,7 +181,7 @@
         "severity": "error",
         "message": "max_changed_files limit must not be exceeded.",
         "actual": 1,
-        "expected": 5
+        "expected": 3
       },
       {
         "rule": "max_added_lines",
@@ -189,7 +189,7 @@
         "severity": "error",
         "message": "max_added_lines limit must not be exceeded.",
         "actual": 6,
-        "expected": 100
+        "expected": 50
       },
       {
         "rule": "max_deleted_lines",
@@ -197,15 +197,15 @@
         "severity": "error",
         "message": "max_deleted_lines limit must not be exceeded.",
         "actual": 1,
-        "expected": 100
+        "expected": 50
       },
       {
         "rule": "require_agent_submission",
         "passed": true,
-        "severity": "info",
-        "message": "Agent submission status is optional.",
+        "severity": "error",
+        "message": "Agent must finish with Submitted status.",
         "actual": "Submitted",
-        "expected": "optional"
+        "expected": "Submitted"
       },
       {
         "rule": "warn_on_failed_commands",

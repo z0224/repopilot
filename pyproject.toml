@@ -7,7 +7,9 @@ name = "repopilot"
 version = "0.1.0"
 description = "Audit and verify AI coding-agent changes."
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "PyYAML>=6,<7",
+]
 
 [project.optional-dependencies]
 semantic = [
