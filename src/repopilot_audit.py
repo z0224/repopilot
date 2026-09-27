@@ -39,9 +39,15 @@ def classify_write_text(command):
 
 
 def classify_targeted_sed(command):
-    """Recognize an in-place sed substitution."""
+    """Recognize targeted in-place shell substitutions."""
     if re.search(r"\bsed\s+-i\s+['\"]s/", command):
         return "targeted_sed_substitution"
+
+    if re.search(
+        r"\bperl\s+-[^\s]*i[^\s]*\s+-e\s+['\"]s/",
+        command,
+    ):
+        return "targeted_perl_substitution"
 
     return None
 
@@ -295,7 +301,7 @@ def verify(project_path, test_command, trajectory_path):
     )
 
     report = {
-        "schema_version": 4,
+        "schema_version": 5,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,

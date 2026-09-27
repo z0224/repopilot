@@ -241,3 +241,38 @@ def test_recognizes_targeted_sed_substitution(tmp_path):
         result["targeted_rewrite_operations"][0]["operation_type"]
         == "targeted_sed_substitution"
     )
+
+
+def test_recognizes_targeted_perl_substitution(tmp_path):
+    trajectory = {
+        "messages": [
+            {
+                "role": "assistant",
+                "extra": {
+                    "actions": [
+                        {
+                            "command": (
+                                "perl -0pi -e "
+                                "'s/old block/new block/s' service.py"
+                            )
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+
+    assert result["overwrite_operations"] == []
+    assert len(result["targeted_rewrite_operations"]) == 1
+    assert (
+        result["targeted_rewrite_operations"][0]["operation_type"]
+        == "targeted_perl_substitution"
+    )
