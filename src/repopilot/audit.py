@@ -6,7 +6,7 @@ import re
 from difflib import SequenceMatcher
 from pathlib import Path
 
-from repopilot_guard import collect_files, run_test_command
+from .snapshot import collect_files, run_test_command
 
 
 OVERWRITE_PATTERNS = {
@@ -278,7 +278,7 @@ def verify(project_path, test_command, trajectory_path):
 
     if not baseline_path.is_file():
         raise SystemExit(
-            "Baseline not found. Run repopilot_guard.py start first."
+            "Baseline not found. Run repopilot start first."
         )
 
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))

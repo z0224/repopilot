@@ -2,8 +2,8 @@
 
 import argparse
 
-from repopilot_audit import verify
-from repopilot_guard import start_baseline
+from .audit import verify
+from .snapshot import start_baseline
 
 
 def build_parser():

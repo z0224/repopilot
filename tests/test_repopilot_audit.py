@@ -1,11 +1,11 @@
 import json
 
-from repopilot_audit import (
+from repopilot.audit import (
     audit_trajectory,
     compare_files,
     is_test_file,
 )
-from repopilot_guard import sha256_text
+from repopilot.snapshot import sha256_text
 
 
 def file_record(content):
