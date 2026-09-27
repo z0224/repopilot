@@ -2,9 +2,14 @@
 
 import argparse
 import json
+from pathlib import Path
 
 from .audit import verify
-from .retrieval import LexicalRetriever, index_repository
+from .retrieval import (
+    LexicalRetriever,
+    evaluate_lexical_manifest,
+    index_repository,
+)
 from .snapshot import start_baseline
 
 
@@ -104,11 +109,69 @@ def build_parser():
         help="Output machine-readable JSON.",
     )
 
+    evaluation_parser = subparsers.add_parser(
+        "evaluate-retrieval",
+        help="Evaluate lexical retrieval from a manifest.",
+    )
+    evaluation_parser.add_argument(
+        "manifest",
+        help="Path to the retrieval ground-truth manifest.",
+    )
+    evaluation_parser.add_argument(
+        "--output",
+        help="Optional JSON report output path.",
+    )
+
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+
+    if arguments.command == "evaluate-retrieval":
+        report = evaluate_lexical_manifest(
+            arguments.manifest
+        )
+        serialized = json.dumps(
+            report,
+            ensure_ascii=False,
+            indent=2,
+        )
+
+        if arguments.output:
+            output_path = Path(
+                arguments.output
+            ).expanduser().resolve()
+            output_path.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+            output_path.write_text(
+                serialized,
+                encoding="utf-8",
+            )
+        else:
+            output_path = None
+
+        aggregate = report["aggregate"]
+
+        print(f"Retriever: {report['retriever']}")
+        print(f"Tasks: {aggregate['task_count']}")
+
+        for k, value in aggregate[
+            "mean_recall_at"
+        ].items():
+            print(f"Mean Recall@{k}: {value}")
+
+        print(
+            "Mean Reciprocal Rank: "
+            f"{aggregate['mean_reciprocal_rank']}"
+        )
+
+        if output_path:
+            print(f"Report saved to: {output_path}")
+
+        return
 
     if arguments.command == "index":
         result = index_repository(

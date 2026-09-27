@@ -103,3 +103,59 @@ def test_retrieve_rejects_invalid_top_k(tmp_path):
 
     assert result.returncode == 2
     assert "must be at least 1" in result.stderr
+
+
+def test_evaluate_retrieval_command_writes_report(tmp_path):
+    benchmark_root = tmp_path / "benchmarks"
+    project = benchmark_root / "task-001"
+    project.mkdir(parents=True)
+
+    (project / "service.py").write_text(
+        '''def calculate_total(items):
+    """Calculate the total price."""
+    return sum(items)
+''',
+        encoding="utf-8",
+    )
+
+    manifest = benchmark_root / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "id": "task-001",
+                        "project": "task-001",
+                        "query": "calculate total price",
+                        "relevant_files": ["service.py"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    output = tmp_path / "results" / "retrieval.json"
+
+    result = run_cli(
+        "evaluate-retrieval",
+        manifest,
+        "--output",
+        output,
+    )
+
+    assert result.returncode == 0
+    assert "Retriever: lexical" in result.stdout
+    assert "Tasks: 1" in result.stdout
+    assert "Mean Recall@1: 1.0" in result.stdout
+    assert output.is_file()
+
+    report = json.loads(
+        output.read_text(encoding="utf-8")
+    )
+
+    assert report["aggregate"]["task_count"] == 1
+    assert (
+        report["aggregate"]["mean_recall_at"]["1"]
+        == 1.0
+    )
