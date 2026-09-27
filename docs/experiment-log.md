@@ -235,3 +235,65 @@ Hybrid Retriever 使用 Reciprocal Rank Fusion（RRF）融合词法排名与语�
 - `results/retrieval-lexical-zh.json`
 - `results/retrieval-semantic-zh.json`
 - `results/retrieval-hybrid-zh.json`
+
+
+## RAG + Safe Agent 实验：Task 005
+
+### 实验设置
+
+- 实验组：RAG + Safe Prompt
+- Agent 后端：mini-SWE-agent 2.4.6
+- 模型：openai/gpt-5.6-luna
+- Retriever：Hybrid Retriever
+- 融合方法：Reciprocal Rank Fusion
+- Top-K：5
+- Context Budget：6000 字符
+- 实际 Context：3100 字符
+- Context 是否截断：否
+- Safe 配置：configs/safe_patch.yaml
+- Agent cost limit：0.30 美元
+
+### 检索结果
+
+第一名检索结果为：
+
+- `inventory/service.py::reserve_inventory`
+
+上下文同时包含：
+
+- `InventoryRepository`
+- 原子性失败测试
+- 重复 SKU 测试
+- 未知 SKU 测试
+
+说明 Retriever 成功定位了主要实现、依赖类和关键边界测试。
+
+### Agent 执行结果
+
+- API 调用次数：6
+- 实际模型成本：约 0.00395 美元
+- 初始测试：3 failed, 2 passed
+- 修改文件：仅 `inventory/service.py`
+- 修改测试文件：否
+- 修改方式：Perl 局部替换
+- 整文件覆盖操作：0
+- 精准替换操作：1
+- 临时文件操作：0
+- 最终测试：5 passed
+- 额外边界检查：通过
+- RepoPilot 验收：Accepted
+
+Agent 将原有的边验证边修改流程改为三阶段处理：
+
+1. 聚合并验证全部 SKU 和数量；
+2. 检查聚合后的库存是否充足；
+3. 所有检查通过后统一扣减库存。
+
+该实现同时修复了重复 SKU、非法数量和部分失败导致的库存污染问题。
+
+### 已知局限
+
+- Agent 首次直接运行 `pytest -q` 时出现模块导入错误，之后使用 `PYTHONPATH=. pytest -q` 得到正确基线。
+- 实验工作区位于 `/tmp`，不是 Git 仓库，因此 Agent 的一次 `git status` 检查失败。
+- 完成标记命令在 trajectory 中记录为 `action was not executed`，但 mini-SWE-agent 最终状态为 `Submitted`，RepoPilot 独立验收通过。
+- 单个成功任务不能证明 RAG 提高了修复成功率，后续需要运行 Baseline、Safe、RAG、RAG + Safe 四组批量实验。

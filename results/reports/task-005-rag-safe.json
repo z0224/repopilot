@@ -1,0 +1,34 @@
+{
+  "schema_version": 5,
+  "project": "/tmp/repopilot-task-005-rag-safe-2A05Fx",
+  "accepted": true,
+  "changes": [
+    {
+      "path": "inventory/service.py",
+      "status": "modified",
+      "added_lines": 6,
+      "deleted_lines": 1
+    }
+  ],
+  "changed_test_files": [],
+  "trajectory_audit": {
+    "trajectory_provided": true,
+    "commands_checked": 6,
+    "overwrite_operations": [],
+    "targeted_rewrite_operations": [
+      {
+        "command_index": 4,
+        "operation_type": "targeted_perl_substitution",
+        "command": "perl -0pi -e 's/def reserve_inventory\\(repository, items\\):\\n    \"\"\"Reserve a list of \\(sku, quantity\\) items\\.\"\"\"\\n    for sku, quantity in items:\\n        if quantity <= 0:\\n            raise ValueError\\(\"quantity must be positive\"\\)\\n\\n        available = repository\\.available\\(sku\\)\\n\\n        if available < quantity:\\n            raise InsufficientStockError\\(sku\\)\\n\\n        repository\\.set_available\\(\\n            sku,\\n            available - quantity,\\n        \\)/def reserve_inventory(repository, items):\\n    \"\"\"Reserve a list of (sku, quantity) items.\"\"\"\\n    requested = {}\\n    for sku, quantity in items:\\n        if quantity <= 0:\\n            raise ValueError(\"quantity must be positive\")\\n\\n        requested[sku] = requested.get(sku, 0) + quantity\\n\\n    for sku, quantity in requested.items():\\n        available = repository.available(sku)\\n\\n        if available < quantity:\\n            raise InsufficientStockError(sku)\\n\\n    for sku, quantity in requested.items():\\n        repository.set_available(\\n            sku,\\n            repository.available(sku) - quantity,\\n        )/s' inventory/service.py\nprintf '%s\\n' '-- changed service --'\nnl -ba inventory/service.py\nprintf '%s\\n' '-- diff-like check --'\ngit -C /tmp/repopilot-task-005-rag-safe-2A05Fx diff -- inventory/service.py 2>/dev/null || true"
+      }
+    ],
+    "temporary_file_operations": []
+  },
+  "final_test": {
+    "command": "python -m pytest -q",
+    "returncode": 0,
+    "duration_seconds": 0.1467,
+    "stdout": ".....                                                                    [100%]\n5 passed in 0.00s\n",
+    "stderr": ""
+  }
+}
