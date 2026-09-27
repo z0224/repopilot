@@ -171,3 +171,37 @@ def test_recognizes_guarded_targeted_rewrite(tmp_path):
 
     assert result["overwrite_operations"] == []
     assert len(result["targeted_rewrite_operations"]) == 1
+
+
+def test_treats_tmp_cat_redirect_as_temporary(tmp_path):
+    trajectory = {
+        "messages": [
+            {
+                "role": "assistant",
+                "extra": {
+                    "actions": [
+                        {
+                            "command": (
+                                "cat > /tmp/reproduce.py <<'PY'\n"
+                                "print('reproduce')\n"
+                                "PY\n"
+                                "python /tmp/reproduce.py\n"
+                                "rm -f /tmp/reproduce.py"
+                            )
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+
+    assert result["overwrite_operations"] == []
+    assert len(result["temporary_file_operations"]) == 1

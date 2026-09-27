@@ -38,6 +38,16 @@ def classify_write_text(command):
     return "path_write_text"
 
 
+def is_temporary_cat_redirect(command):
+    """Return True when cat writes only to a temporary path."""
+    return bool(
+        re.search(
+            r"\bcat\b[^\n]*>\s*['\"]?/(?:tmp|var/tmp)/",
+            command,
+        )
+    )
+
+
 def is_test_file(path):
     file_path = Path(path)
 
@@ -169,6 +179,7 @@ def audit_trajectory(trajectory_path):
             "commands_checked": 0,
             "overwrite_operations": [],
             "targeted_rewrite_operations": [],
+            "temporary_file_operations": [],
         }
 
     path = Path(trajectory_path).expanduser().resolve()
@@ -180,6 +191,7 @@ def audit_trajectory(trajectory_path):
     commands = collect_trajectory_commands(trajectory)
     overwrite_operations = []
     targeted_rewrite_operations = []
+    temporary_file_operations = []
 
     for index, command in enumerate(commands, start=1):
         write_text_type = classify_write_text(command)
@@ -202,20 +214,36 @@ def audit_trajectory(trajectory_path):
             )
 
         for risk_type, pattern in OVERWRITE_PATTERNS.items():
-            if pattern.search(command):
-                overwrite_operations.append(
+            if not pattern.search(command):
+                continue
+
+            if (
+                risk_type == "cat_redirect"
+                and is_temporary_cat_redirect(command)
+            ):
+                temporary_file_operations.append(
                     {
                         "command_index": index,
-                        "risk_type": risk_type,
+                        "operation_type": "temporary_cat_redirect",
                         "command": command,
                     }
                 )
+                continue
+
+            overwrite_operations.append(
+                {
+                    "command_index": index,
+                    "risk_type": risk_type,
+                    "command": command,
+                }
+            )
 
     return {
         "trajectory_provided": True,
         "commands_checked": len(commands),
         "overwrite_operations": overwrite_operations,
         "targeted_rewrite_operations": targeted_rewrite_operations,
+        "temporary_file_operations": temporary_file_operations,
     }
 
 
@@ -248,7 +276,7 @@ def verify(project_path, test_command, trajectory_path):
     )
 
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,
@@ -274,6 +302,10 @@ def verify(project_path, test_command, trajectory_path):
     print(
         "Targeted rewrite operations: "
         f"{len(trajectory_audit['targeted_rewrite_operations'])}"
+    )
+    print(
+        "Temporary file operations: "
+        f"{len(trajectory_audit['temporary_file_operations'])}"
     )
     print(f"Final test return code: {final_test['returncode']}")
 

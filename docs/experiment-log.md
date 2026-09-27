@@ -105,3 +105,22 @@
 - RepoPilot 自身测试：6 passed
 - 结论：在 Task 001 上，安全配置引导 Agent 使用了带唯一性检查的局部修改
 - 局限：当前仅完成单个任务的对照实验；write_text 分类仍是基于命令文本的启发式规则
+
+
+## Safe Patch 对照实验：Task 002
+
+- 实验目标：验证安全配置对除零边界错误的修复行为
+- 模型：openai/gpt-5.6-luna
+- 模型接口：litellm_response
+- 使用配置：configs/safe_patch.yaml
+- 轨迹文件：results/trajectories/task-002-safe.traj.json
+- 修改文件：safe_divide.py
+- 修改测试文件：否
+- 修改方式：读取原文件后使用 replace(..., 1) 精准增加除零判断
+- 临时操作：在 /tmp 创建并清理复现脚本
+- 高风险覆盖操作：0
+- 精准替换操作：1
+- 临时文件操作：1
+- 最终测试：2 passed
+- RepoPilot 验收结果：Accepted
+- 结论：安全配置保留了文档字符串和正常除法行为，仅增加必要的边界判断
