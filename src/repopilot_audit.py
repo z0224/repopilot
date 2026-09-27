@@ -38,6 +38,14 @@ def classify_write_text(command):
     return "path_write_text"
 
 
+def classify_targeted_sed(command):
+    """Recognize an in-place sed substitution."""
+    if re.search(r"\bsed\s+-i\s+['\"]s/", command):
+        return "targeted_sed_substitution"
+
+    return None
+
+
 def is_temporary_cat_redirect(command):
     """Return True when cat writes only to a temporary path."""
     return bool(
@@ -213,6 +221,17 @@ def audit_trajectory(trajectory_path):
                 }
             )
 
+        targeted_sed_type = classify_targeted_sed(command)
+
+        if targeted_sed_type:
+            targeted_rewrite_operations.append(
+                {
+                    "command_index": index,
+                    "operation_type": targeted_sed_type,
+                    "command": command,
+                }
+            )
+
         for risk_type, pattern in OVERWRITE_PATTERNS.items():
             if not pattern.search(command):
                 continue
@@ -276,7 +295,7 @@ def verify(project_path, test_command, trajectory_path):
     )
 
     report = {
-        "schema_version": 3,
+        "schema_version": 4,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,
