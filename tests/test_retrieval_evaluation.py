@@ -202,3 +202,51 @@ def test_evaluates_semantic_manifest(tmp_path):
     assert report["retriever"] == "semantic"
     assert report["model"] == "fake-cross-language"
     assert report["aggregate"]["mean_recall_at"]["1"] == 1.0
+
+def test_evaluates_hybrid_manifest(tmp_path):
+    benchmark_root = tmp_path / "benchmarks"
+    project = benchmark_root / "task-001"
+    project.mkdir(parents=True)
+
+    (project / "inventory.py").write_text(
+        '''def reserve_inventory(items):
+    """Atomically reserve inventory."""
+    return items
+''',
+        encoding="utf-8",
+    )
+
+    manifest = benchmark_root / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "id": "task-001",
+                        "project": "task-001",
+                        "query": "库存预留必须具有原子性",
+                        "relevant_files": [
+                            "inventory.py"
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    from repopilot.retrieval import (
+        evaluate_hybrid_manifest,
+    )
+
+    report = evaluate_hybrid_manifest(
+        manifest,
+        embedder=FakeCrossLanguageEmbedder(),
+    )
+
+    assert report["retriever"] == "hybrid"
+    assert report["fusion"] == (
+        "reciprocal_rank_fusion"
+    )
+    assert report["model"] == "fake-cross-language"
+    assert report["aggregate"]["mean_recall_at"]["1"] == 1.0

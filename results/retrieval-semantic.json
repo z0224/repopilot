@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "retriever": "semantic",
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "manifest": "/home/zht_2/agent-project/repopilot/benchmarks/retrieval-ground-truth.json",
+  "tasks": [
+    {
+      "task_id": "task-001",
+      "query": "calculator add addition incorrect result test",
+      "relevant_files": [
+        "calculator.py",
+        "test_calculator.py"
+      ],
+      "retrieved_files": [
+        "test_calculator.py",
+        "calculator.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-002",
+      "query": "safe divide division by zero return none",
+      "relevant_files": [
+        "safe_divide.py",
+        "test_safe_divide.py"
+      ],
+      "retrieved_files": [
+        "safe_divide.py",
+        "test_safe_divide.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-003",
+      "query": "checkout discount percentage price format currency",
+      "relevant_files": [
+        "pricing.py",
+        "order_service.py",
+        "test_order_service.py"
+      ],
+      "retrieved_files": [
+        "pricing.py",
+        "order_service.py",
+        "test_order_service.py"
+      ],
+      "recall_at": {
+        "1": 0.333333,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-004",
+      "query": "average score ignore missing none records data cleaner",
+      "relevant_files": [
+        "data_cleaner.py",
+        "report_service.py",
+        "test_report_service.py"
+      ],
+      "retrieved_files": [
+        "report_service.py",
+        "data_cleaner.py",
+        "test_report_service.py"
+      ],
+      "recall_at": {
+        "1": 0.333333,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-005",
+      "query": "duplicate sku atomic inventory reservation insufficient stock",
+      "relevant_files": [
+        "inventory/service.py",
+        "inventory/repository.py",
+        "inventory/errors.py",
+        "tests/test_inventory_service.py"
+      ],
+      "retrieved_files": [
+        "inventory/service.py",
+        "tests/test_inventory_service.py",
+        "inventory/repository.py",
+        "inventory/errors.py"
+      ],
+      "recall_at": {
+        "1": 0.25,
+        "3": 0.75,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    }
+  ],
+  "aggregate": {
+    "task_count": 5,
+    "mean_recall_at": {
+      "1": 0.383333,
+      "3": 0.95,
+      "5": 1.0
+    },
+    "mean_reciprocal_rank": 1.0
+  }
+}

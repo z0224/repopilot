@@ -182,3 +182,56 @@
 - 原子性、重复 SKU、非法数量和未知 SKU：均通过测试
 - RepoPilot 验收结果：Accepted
 - 结论：Agent 在工具不可用后完成安全降级，未覆盖完整文件或修改测试
+
+
+## Repository RAG 检索对照实验
+
+### 实验目标
+
+比较 Lexical、Semantic 和 Hybrid 三种代码检索方法在英文和中文自然语言查询上的效果。
+
+Hybrid Retriever 使用 Reciprocal Rank Fusion（RRF）融合词法排名与语义排名，默认两个检索器权重相同。
+
+### 实验设置
+
+- Benchmark 数量：5
+- 评测粒度：文件级
+- 指标：Recall@1、Recall@3、Recall@5、MRR
+- 语义模型：sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+- Hybrid 融合方式：Reciprocal Rank Fusion
+- 自动化测试：47 passed
+
+### 实验结果
+
+| 查询语言 | Retriever | Recall@1 | Recall@3 | Recall@5 | MRR |
+|---|---|---:|---:|---:|---:|
+| English | Lexical | 0.383333 | 0.950000 | 1.000000 | 1.000000 |
+| English | Semantic | 0.383333 | 0.950000 | 1.000000 | 1.000000 |
+| English | Hybrid | 0.383333 | 0.950000 | 1.000000 | 1.000000 |
+| Chinese | Lexical | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
+| Chinese | Semantic | 0.383333 | 0.950000 | 1.000000 | 1.000000 |
+| Chinese | Hybrid | 0.383333 | 0.950000 | 1.000000 | 1.000000 |
+
+### 结果分析
+
+1. 英文查询下，三种检索器在当前 Benchmark 上获得相同指标。
+2. 中文查询下，基于精确词项匹配的 Lexical Retriever 无法召回英文代码。
+3. 多语言 Semantic Retriever 能够完成中文任务描述到英文代码的跨语言检索。
+4. Hybrid Retriever 在英文和中文查询上都保持了当前最佳结果，没有引入指标退化。
+5. 当前实验没有证明 Hybrid Retriever 优于 Semantic Retriever，但证明了统一检索接口可以同时兼容精确符号检索和跨语言语义检索。
+
+### 局限性
+
+- 当前 Benchmark 只有 5 个任务，规模较小。
+- 各任务代码量较少，候选代码块数量有限。
+- 当前 RRF 使用固定权重，尚未进行权重搜索。
+- 尚未评测真实大型代码仓库中的检索延迟、索引体积和端到端 Agent 修复成功率。
+
+### 结果文件
+
+- `results/retrieval-lexical.json`
+- `results/retrieval-semantic.json`
+- `results/retrieval-hybrid.json`
+- `results/retrieval-lexical-zh.json`
+- `results/retrieval-semantic-zh.json`
+- `results/retrieval-hybrid-zh.json`

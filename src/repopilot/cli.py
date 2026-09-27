@@ -9,6 +9,7 @@ from .retrieval import (
     DEFAULT_MODEL,
     LexicalRetriever,
     SentenceTransformerEmbedder,
+    evaluate_hybrid_manifest,
     evaluate_lexical_manifest,
     evaluate_semantic_manifest,
     index_repository,
@@ -126,7 +127,7 @@ def build_parser():
     )
     evaluation_parser.add_argument(
         "--retriever",
-        choices=("lexical", "semantic"),
+        choices=("lexical", "semantic", "hybrid"),
         default="lexical",
         help="Retrieval implementation to evaluate.",
     )
@@ -148,6 +149,14 @@ def main():
                 model_name=arguments.model,
             )
             report = evaluate_semantic_manifest(
+                arguments.manifest,
+                embedder=embedder,
+            )
+        elif arguments.retriever == "hybrid":
+            embedder = SentenceTransformerEmbedder(
+                model_name=arguments.model,
+            )
+            report = evaluate_hybrid_manifest(
                 arguments.manifest,
                 embedder=embedder,
             )

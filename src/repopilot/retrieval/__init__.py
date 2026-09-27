@@ -5,6 +5,10 @@ from .chunker import (
     chunk_python_file,
     chunk_python_source,
 )
+from .hybrid import (
+    HybridRetrievalResult,
+    HybridRetriever,
+)
 from .indexer import (
     IndexBuildResult,
     RepositoryIndexer,
@@ -29,6 +33,8 @@ from .semantic import (
 
 __all__ = [
     "CodeChunk",
+    "HybridRetrievalResult",
+    "HybridRetriever",
     "IndexBuildResult",
     "LexicalRetriever",
     "RepositoryIndexer",
@@ -40,6 +46,7 @@ __all__ = [
     "tokenize",
     "RetrievalEvaluation",
     "aggregate_evaluations",
+    "evaluate_hybrid_manifest",
     "evaluate_lexical_manifest",
     "evaluate_semantic_manifest",
     "evaluate_results",
@@ -56,6 +63,7 @@ __all__ = [
 from .evaluation import (
     RetrievalEvaluation,
     aggregate_evaluations,
+    evaluate_hybrid_manifest,
     evaluate_lexical_manifest,
     evaluate_semantic_manifest,
     evaluate_results,

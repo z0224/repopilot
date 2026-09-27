@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 
+from .hybrid import HybridRetriever
 from .indexer import index_repository
 from .lexical import LexicalRetriever
 from .semantic import (
@@ -273,6 +274,77 @@ def evaluate_semantic_manifest(
             "model_name",
             type(embedder).__name__,
         ),
+        "manifest": str(manifest_path),
+        "tasks": [
+            evaluation.to_dict()
+            for evaluation in evaluations
+        ],
+        "aggregate": aggregate_evaluations(
+            evaluations,
+            k_values=k_values,
+        ),
+    }
+
+
+
+def evaluate_hybrid_manifest(
+    manifest_path,
+    embedder=None,
+    k_values=DEFAULT_K_VALUES,
+):
+    """Evaluate hybrid retrieval using a JSON manifest."""
+    manifest_path = Path(
+        manifest_path
+    ).expanduser().resolve()
+
+    manifest = json.loads(
+        manifest_path.read_text(encoding="utf-8")
+    )
+    tasks = manifest.get("tasks")
+
+    if not isinstance(tasks, list):
+        raise ValueError(
+            "manifest must contain a tasks list"
+        )
+
+    if embedder is None:
+        embedder = SentenceTransformerEmbedder()
+
+    evaluations = []
+    benchmark_root = manifest_path.parent
+
+    for task in tasks:
+        project = benchmark_root / task["project"]
+        index = index_repository(project)
+        retriever = HybridRetriever(
+            index.chunks,
+            embedder,
+        )
+
+        results = retriever.search(
+            task["query"],
+            top_k=max(1, len(index.chunks)),
+        )
+
+        evaluations.append(
+            evaluate_results(
+                task_id=task["id"],
+                query=task["query"],
+                relevant_files=task["relevant_files"],
+                results=results,
+                k_values=k_values,
+            )
+        )
+
+    return {
+        "schema_version": 1,
+        "retriever": "hybrid",
+        "model": getattr(
+            embedder,
+            "model_name",
+            type(embedder).__name__,
+        ),
+        "fusion": "reciprocal_rank_fusion",
         "manifest": str(manifest_path),
         "tasks": [
             evaluation.to_dict()
