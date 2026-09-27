@@ -159,3 +159,90 @@ def test_evaluate_retrieval_command_writes_report(tmp_path):
         report["aggregate"]["mean_recall_at"]["1"]
         == 1.0
     )
+
+
+def test_context_command_writes_context_bundle(tmp_path):
+    project = create_project(tmp_path)
+
+    result = run_cli(
+        "context",
+        project,
+        "--query",
+        "calculate total price",
+        "--retriever",
+        "lexical",
+        "--top-k",
+        "3",
+        "--max-chars",
+        "2000",
+    )
+
+    assert result.returncode == 0
+    assert "Retriever: lexical" in result.stdout
+    assert "Included chunks: 1" in result.stdout
+
+    markdown_path = (
+        project / ".repopilot" / "context.md"
+    )
+    metadata_path = (
+        project / ".repopilot" / "context.json"
+    )
+
+    assert markdown_path.is_file()
+    assert metadata_path.is_file()
+
+    markdown = markdown_path.read_text(
+        encoding="utf-8"
+    )
+    metadata = json.loads(
+        metadata_path.read_text(encoding="utf-8")
+    )
+
+    assert "service.py::calculate_total" in markdown
+    assert metadata["retriever"] == "lexical"
+    assert (
+        metadata["context"]["items"][0]["symbol"]
+        == "calculate_total"
+    )
+
+
+def test_run_command_supports_dry_run(tmp_path):
+    project = create_project(tmp_path)
+    trajectory = (
+        tmp_path / "results" / "agent.traj.json"
+    )
+
+    result = run_cli(
+        "run",
+        project,
+        "--task",
+        "Fix total calculation",
+        "--retriever",
+        "lexical",
+        "--mini-executable",
+        "/missing/mini",
+        "--output",
+        trajectory,
+        "--dry-run",
+    )
+
+    assert result.returncode == 0
+    assert "Dry run: True" in result.stdout
+    assert "Retriever: lexical" in result.stdout
+    assert "<prompt saved to" in result.stdout
+    assert not trajectory.exists()
+
+    context_path = (
+        trajectory.parent
+        / "agent.traj.context.md"
+    )
+
+    assert context_path.is_file()
+
+    prompt = context_path.read_text(
+        encoding="utf-8"
+    )
+
+    assert "Fix total calculation" in prompt
+    assert "service.py::calculate_total" in prompt
+    assert "Run the existing tests" in prompt

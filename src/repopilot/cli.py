@@ -2,12 +2,17 @@
 
 import argparse
 import json
+import shlex
 from pathlib import Path
 
+from .adapters import MiniSWEAgentAdapter
 from .audit import verify
+from .context import build_context_bundle
 from .retrieval import (
     DEFAULT_MODEL,
+    HybridRetriever,
     LexicalRetriever,
+    SemanticRetriever,
     SentenceTransformerEmbedder,
     evaluate_hybrid_manifest,
     evaluate_lexical_manifest,
@@ -113,6 +118,113 @@ def build_parser():
         help="Output machine-readable JSON.",
     )
 
+    context_parser = subparsers.add_parser(
+        "context",
+        help="Build a bounded retrieval context bundle.",
+    )
+    context_parser.add_argument(
+        "project",
+        help="Project directory to search.",
+    )
+    context_parser.add_argument(
+        "--query",
+        required=True,
+        help="Coding task or issue description.",
+    )
+    context_parser.add_argument(
+        "--retriever",
+        choices=("lexical", "semantic", "hybrid"),
+        default="hybrid",
+        help="Retrieval implementation to use.",
+    )
+    context_parser.add_argument(
+        "--top-k",
+        type=positive_int,
+        default=5,
+        help="Maximum number of context chunks.",
+    )
+    context_parser.add_argument(
+        "--max-chars",
+        type=positive_int,
+        default=12000,
+        help="Maximum context size in characters.",
+    )
+    context_parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="Sentence-transformers model.",
+    )
+    context_parser.add_argument(
+        "--output",
+        help=(
+            "Markdown output path. Defaults to "
+            "PROJECT/.repopilot/context.md."
+        ),
+    )
+
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Retrieve context and run a coding agent.",
+    )
+    run_parser.add_argument(
+        "project",
+        help="Project directory the agent will modify.",
+    )
+    run_parser.add_argument(
+        "--task",
+        required=True,
+        help="Coding task or issue description.",
+    )
+    run_parser.add_argument(
+        "--retriever",
+        choices=("lexical", "semantic", "hybrid"),
+        default="hybrid",
+    )
+    run_parser.add_argument(
+        "--top-k",
+        type=positive_int,
+        default=5,
+    )
+    run_parser.add_argument(
+        "--max-chars",
+        type=positive_int,
+        default=12000,
+    )
+    run_parser.add_argument(
+        "--embedding-model",
+        default=DEFAULT_MODEL,
+    )
+    run_parser.add_argument(
+        "--agent-model",
+        help="Optional mini-SWE-agent model override.",
+    )
+    run_parser.add_argument(
+        "--mini-executable",
+        default="mini",
+        help="Path to the mini-SWE-agent executable.",
+    )
+    run_parser.add_argument(
+        "--agent-config",
+        action="append",
+        default=[],
+        help=(
+            "Additional mini-SWE-agent config. "
+            "May be supplied multiple times."
+        ),
+    )
+    run_parser.add_argument(
+        "--output",
+        help=(
+            "Trajectory output path. Defaults to "
+            "PROJECT/.repopilot/agent.traj.json."
+        ),
+    )
+    run_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Prepare context and command without running the agent.",
+    )
+
     evaluation_parser = subparsers.add_parser(
         "evaluate-retrieval",
         help="Evaluate lexical retrieval from a manifest.",
@@ -142,6 +254,242 @@ def build_parser():
 
 def main():
     arguments = build_parser().parse_args()
+
+    if arguments.command == "run":
+        project_path = Path(
+            arguments.project
+        ).expanduser().resolve()
+
+        index = index_repository(project_path)
+
+        if arguments.retriever == "lexical":
+            retriever = LexicalRetriever(index.chunks)
+        else:
+            embedder = SentenceTransformerEmbedder(
+                model_name=arguments.embedding_model,
+            )
+
+            if arguments.retriever == "semantic":
+                retriever = SemanticRetriever(
+                    index.chunks,
+                    embedder,
+                )
+            else:
+                retriever = HybridRetriever(
+                    index.chunks,
+                    embedder,
+                )
+
+        results = retriever.search(
+            arguments.task,
+            top_k=arguments.top_k,
+        )
+        bundle = build_context_bundle(
+            arguments.task,
+            results,
+            max_chars=arguments.max_chars,
+            max_chunks=arguments.top_k,
+        )
+
+        if arguments.output:
+            trajectory_path = Path(
+                arguments.output
+            ).expanduser().resolve()
+        else:
+            trajectory_path = (
+                project_path
+                / ".repopilot"
+                / "agent.traj.json"
+            )
+
+        config_paths = ["mini.yaml"]
+
+        for config in arguments.agent_config:
+            if config == "mini.yaml":
+                continue
+
+            config_paths.append(
+                str(
+                    Path(config)
+                    .expanduser()
+                    .resolve()
+                )
+            )
+
+        adapter = MiniSWEAgentAdapter(
+            executable=arguments.mini_executable,
+            config_paths=config_paths,
+            model=arguments.agent_model,
+        )
+
+        if arguments.dry_run:
+            trajectory_path.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+            prompt = adapter.build_prompt(
+                arguments.task,
+                bundle,
+            )
+            context_path = (
+                trajectory_path.parent
+                / (
+                    trajectory_path.stem
+                    + ".context.md"
+                )
+            )
+            context_path.write_text(
+                prompt,
+                encoding="utf-8",
+            )
+
+            command = list(
+                adapter.build_command(
+                    prompt,
+                    trajectory_path,
+                )
+            )
+            task_position = (
+                command.index("--task") + 1
+            )
+            command[task_position] = (
+                f"<prompt saved to {context_path}>"
+            )
+
+            print("Dry run: True")
+            print(f"Retriever: {arguments.retriever}")
+            print(
+                f"Retrieved chunks: {len(results)}"
+            )
+            print(
+                f"Included chunks: {len(bundle.items)}"
+            )
+            print(
+                f"Context characters: {bundle.char_count}"
+            )
+            print(f"Context saved to: {context_path}")
+            print(
+                "Command: "
+                + shlex.join(command)
+            )
+            return
+
+        result = adapter.run(
+            project_path,
+            arguments.task,
+            bundle,
+            trajectory_path,
+        )
+
+        print(f"Agent return code: {result.returncode}")
+        print(
+            f"Trajectory: {result.trajectory_path}"
+        )
+        print(
+            f"Injected context: {result.context_path}"
+        )
+
+        if result.stdout:
+            print(result.stdout)
+
+        if result.stderr:
+            print(result.stderr)
+
+        if not result.succeeded:
+            raise SystemExit(result.returncode)
+
+        return
+
+    if arguments.command == "context":
+        project_path = Path(
+            arguments.project
+        ).expanduser().resolve()
+
+        index = index_repository(project_path)
+        model_name = None
+
+        if arguments.retriever == "lexical":
+            retriever = LexicalRetriever(index.chunks)
+        else:
+            embedder = SentenceTransformerEmbedder(
+                model_name=arguments.model,
+            )
+            model_name = getattr(
+                embedder,
+                "model_name",
+                arguments.model,
+            )
+
+            if arguments.retriever == "semantic":
+                retriever = SemanticRetriever(
+                    index.chunks,
+                    embedder,
+                )
+            else:
+                retriever = HybridRetriever(
+                    index.chunks,
+                    embedder,
+                )
+
+        results = retriever.search(
+            arguments.query,
+            top_k=arguments.top_k,
+        )
+
+        bundle = build_context_bundle(
+            arguments.query,
+            results,
+            max_chars=arguments.max_chars,
+            max_chunks=arguments.top_k,
+        )
+
+        if arguments.output:
+            output_path = Path(
+                arguments.output
+            ).expanduser().resolve()
+        else:
+            output_path = (
+                project_path
+                / ".repopilot"
+                / "context.md"
+            )
+
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        output_path.write_text(
+            bundle.markdown,
+            encoding="utf-8",
+        )
+
+        metadata_path = output_path.with_suffix(
+            ".json"
+        )
+        metadata = {
+            "schema_version": 1,
+            "retriever": arguments.retriever,
+            "model": model_name,
+            "index": str(index.index_path),
+            "context": bundle.to_dict(),
+        }
+        metadata_path.write_text(
+            json.dumps(
+                metadata,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        print(f"Retriever: {arguments.retriever}")
+        print(f"Retrieved chunks: {len(results)}")
+        print(f"Included chunks: {len(bundle.items)}")
+        print(f"Context characters: {bundle.char_count}")
+        print(f"Context truncated: {bundle.truncated}")
+        print(f"Context saved to: {output_path}")
+        print(f"Metadata saved to: {metadata_path}")
+        return
 
     if arguments.command == "evaluate-retrieval":
         if arguments.retriever == "semantic":

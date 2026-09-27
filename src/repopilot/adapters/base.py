@@ -1,0 +1,44 @@
+"""Common interfaces for coding-agent adapters."""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class AgentRunResult:
+    command: tuple[str, ...]
+    returncode: int
+    stdout: str
+    stderr: str
+    trajectory_path: Path
+    context_path: Path
+
+    @property
+    def succeeded(self):
+        return self.returncode == 0
+
+    def to_dict(self):
+        return {
+            "command": list(self.command),
+            "returncode": self.returncode,
+            "stdout": self.stdout,
+            "stderr": self.stderr,
+            "trajectory_path": str(self.trajectory_path),
+            "context_path": str(self.context_path),
+            "succeeded": self.succeeded,
+        }
+
+
+class AgentAdapter(ABC):
+    @abstractmethod
+    def run(
+        self,
+        project,
+        task,
+        context,
+        output_path,
+    ):
+        """Run an agent and return its structured result."""
