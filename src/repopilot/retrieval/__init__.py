@@ -10,12 +10,22 @@ from .indexer import (
     RepositoryIndexer,
     index_repository,
 )
+from .lexical import (
+    LexicalRetriever,
+    RetrievalResult,
+    search_chunks,
+    tokenize,
+)
 
 __all__ = [
     "CodeChunk",
     "IndexBuildResult",
+    "LexicalRetriever",
     "RepositoryIndexer",
+    "RetrievalResult",
     "chunk_python_file",
     "chunk_python_source",
     "index_repository",
+    "search_chunks",
+    "tokenize",
 ]
