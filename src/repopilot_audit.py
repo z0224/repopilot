@@ -11,11 +11,31 @@ from repopilot_guard import collect_files, run_test_command
 
 OVERWRITE_PATTERNS = {
     "cat_redirect": re.compile(r"\bcat\b[^\n]*(?:>{1}(?!>)|<<)"),
-    "path_write_text": re.compile(r"\.write_text\s*\("),
     "open_write_mode": re.compile(
         r"\bopen\s*\([^)]*,\s*['\"]w['\"]"
     ),
 }
+
+
+def classify_write_text(command):
+    """Classify Path.write_text using a conservative heuristic."""
+    if not re.search(r"\.write_text\s*\(", command):
+        return None
+
+    reads_existing_file = bool(
+        re.search(r"\.read_text\s*\(", command)
+    )
+    replaces_once = bool(
+        re.search(
+            r"\.replace\s*\([^()\n]*,\s*1\s*\)",
+            command,
+        )
+    )
+
+    if reads_existing_file and replaces_once:
+        return "targeted_write_text"
+
+    return "path_write_text"
 
 
 def is_test_file(path):
@@ -148,6 +168,7 @@ def audit_trajectory(trajectory_path):
             "trajectory_provided": False,
             "commands_checked": 0,
             "overwrite_operations": [],
+            "targeted_rewrite_operations": [],
         }
 
     path = Path(trajectory_path).expanduser().resolve()
@@ -158,8 +179,28 @@ def audit_trajectory(trajectory_path):
     trajectory = json.loads(path.read_text(encoding="utf-8"))
     commands = collect_trajectory_commands(trajectory)
     overwrite_operations = []
+    targeted_rewrite_operations = []
 
     for index, command in enumerate(commands, start=1):
+        write_text_type = classify_write_text(command)
+
+        if write_text_type == "targeted_write_text":
+            targeted_rewrite_operations.append(
+                {
+                    "command_index": index,
+                    "operation_type": write_text_type,
+                    "command": command,
+                }
+            )
+        elif write_text_type == "path_write_text":
+            overwrite_operations.append(
+                {
+                    "command_index": index,
+                    "risk_type": write_text_type,
+                    "command": command,
+                }
+            )
+
         for risk_type, pattern in OVERWRITE_PATTERNS.items():
             if pattern.search(command):
                 overwrite_operations.append(
@@ -174,6 +215,7 @@ def audit_trajectory(trajectory_path):
         "trajectory_provided": True,
         "commands_checked": len(commands),
         "overwrite_operations": overwrite_operations,
+        "targeted_rewrite_operations": targeted_rewrite_operations,
     }
 
 
@@ -202,10 +244,11 @@ def verify(project_path, test_command, trajectory_path):
     accepted = (
         final_test["returncode"] == 0
         and not changed_test_files
+        and not trajectory_audit["overwrite_operations"]
     )
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "project": str(project),
         "accepted": accepted,
         "changes": changes,
@@ -227,6 +270,10 @@ def verify(project_path, test_command, trajectory_path):
     print(
         "Overwrite operations: "
         f"{len(trajectory_audit['overwrite_operations'])}"
+    )
+    print(
+        "Targeted rewrite operations: "
+        f"{len(trajectory_audit['targeted_rewrite_operations'])}"
     )
     print(f"Final test return code: {final_test['returncode']}")
 
