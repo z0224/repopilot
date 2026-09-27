@@ -1,10 +1,12 @@
 {
   "schema_version": 1,
+  "language": "en",
+  "task_count": 10,
   "tasks": [
     {
       "id": "task-001",
       "project": "task-001",
-      "query": "calculator add addition incorrect result test",
+      "query": "Fix the add function so addition returns the correct result. Do not modify tests.",
       "relevant_files": [
         "calculator.py",
         "test_calculator.py"
@@ -13,7 +15,7 @@
     {
       "id": "task-002",
       "project": "task-002",
-      "query": "safe divide division by zero return none",
+      "query": "Make safe_divide return None when the divisor is zero while preserving normal division.",
       "relevant_files": [
         "safe_divide.py",
         "test_safe_divide.py"
@@ -22,7 +24,7 @@
     {
       "id": "task-003",
       "project": "task-003",
-      "query": "checkout discount percentage price format currency",
+      "query": "Fix percentage discount calculation while preserving currency formatting and validation.",
       "relevant_files": [
         "pricing.py",
         "order_service.py",
@@ -32,7 +34,7 @@
     {
       "id": "task-004",
       "project": "task-004",
-      "query": "average score ignore missing none records data cleaner",
+      "query": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
       "relevant_files": [
         "data_cleaner.py",
         "report_service.py",
@@ -42,12 +44,58 @@
     {
       "id": "task-005",
       "project": "task-005",
-      "query": "duplicate sku atomic inventory reservation insufficient stock",
+      "query": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
       "relevant_files": [
         "inventory/service.py",
         "inventory/repository.py",
         "inventory/errors.py",
         "tests/test_inventory_service.py"
+      ]
+    },
+    {
+      "id": "task-006",
+      "project": "task-006",
+      "query": "Handle missing and None age values without raising exceptions.",
+      "relevant_files": [
+        "exception_service.py",
+        "tests/test_exception_service.py"
+      ]
+    },
+    {
+      "id": "task-007",
+      "project": "task-007",
+      "query": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "relevant_files": [
+        "config_loader.py",
+        "tests/test_config_loader.py"
+      ]
+    },
+    {
+      "id": "task-008",
+      "project": "task-008",
+      "query": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "relevant_files": [
+        "access_control.py",
+        "tests/test_access_control.py"
+      ]
+    },
+    {
+      "id": "task-009",
+      "project": "task-009",
+      "query": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "relevant_files": [
+        "invoice_service.py",
+        "tests/test_invoice_service.py"
+      ]
+    },
+    {
+      "id": "task-010",
+      "project": "task-010",
+      "query": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "relevant_files": [
+        "checkout/pricing.py",
+        "checkout/service.py",
+        "tests/test_checkout.py"
       ]
     }
   ]

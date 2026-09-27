@@ -1,0 +1,3 @@
+def valid_scores(records):
+    """Return scores from records."""
+    return [record["score"] for record in records]

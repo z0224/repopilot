@@ -1,0 +1,6 @@
+ALLOWED_ROLES = {"admin", "editor"}
+
+
+def can_access(role, is_active=True):
+    """Return whether an active user has an allowed role."""
+    return is_active

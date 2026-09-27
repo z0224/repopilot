@@ -1,0 +1,3 @@
+def safe_divide(a, b):
+    """Return ``a / b``, or ``None`` when the divisor is zero."""
+    return a / b

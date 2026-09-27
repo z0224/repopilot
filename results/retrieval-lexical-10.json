@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "retriever": "lexical",
+  "manifest": "/home/zht_2/agent-project/repopilot/benchmarks/retrieval-ground-truth.json",
+  "tasks": [
+    {
+      "task_id": "task-001",
+      "query": "Fix the add function so addition returns the correct result. Do not modify tests.",
+      "relevant_files": [
+        "calculator.py",
+        "test_calculator.py"
+      ],
+      "retrieved_files": [
+        "test_calculator.py",
+        "calculator.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-002",
+      "query": "Make safe_divide return None when the divisor is zero while preserving normal division.",
+      "relevant_files": [
+        "safe_divide.py",
+        "test_safe_divide.py"
+      ],
+      "retrieved_files": [
+        "safe_divide.py",
+        "test_safe_divide.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-003",
+      "query": "Fix percentage discount calculation while preserving currency formatting and validation.",
+      "relevant_files": [
+        "pricing.py",
+        "order_service.py",
+        "test_order_service.py"
+      ],
+      "retrieved_files": [
+        "pricing.py",
+        "test_order_service.py",
+        "order_service.py"
+      ],
+      "recall_at": {
+        "1": 0.333333,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-004",
+      "query": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
+      "relevant_files": [
+        "data_cleaner.py",
+        "report_service.py",
+        "test_report_service.py"
+      ],
+      "retrieved_files": [
+        "report_service.py",
+        "data_cleaner.py",
+        "test_report_service.py"
+      ],
+      "recall_at": {
+        "1": 0.333333,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-005",
+      "query": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
+      "relevant_files": [
+        "inventory/service.py",
+        "inventory/repository.py",
+        "inventory/errors.py",
+        "tests/test_inventory_service.py"
+      ],
+      "retrieved_files": [
+        "tests/test_inventory_service.py",
+        "inventory/service.py",
+        "inventory/repository.py",
+        "inventory/errors.py"
+      ],
+      "recall_at": {
+        "1": 0.25,
+        "3": 0.75,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-006",
+      "query": "Handle missing and None age values without raising exceptions.",
+      "relevant_files": [
+        "exception_service.py",
+        "tests/test_exception_service.py"
+      ],
+      "retrieved_files": [
+        "tests/test_exception_service.py",
+        "exception_service.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-007",
+      "query": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "relevant_files": [
+        "config_loader.py",
+        "tests/test_config_loader.py"
+      ],
+      "retrieved_files": [
+        "tests/test_config_loader.py",
+        "config_loader.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-008",
+      "query": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "relevant_files": [
+        "access_control.py",
+        "tests/test_access_control.py"
+      ],
+      "retrieved_files": [
+        "tests/test_access_control.py",
+        "access_control.py",
+        "audit_log.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-009",
+      "query": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "relevant_files": [
+        "invoice_service.py",
+        "tests/test_invoice_service.py"
+      ],
+      "retrieved_files": [
+        "tests/test_invoice_service.py",
+        "invoice_service.py"
+      ],
+      "recall_at": {
+        "1": 0.5,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "reciprocal_rank": 1.0
+    },
+    {
+      "task_id": "task-010",
+      "query": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "relevant_files": [
+        "checkout/pricing.py",
+        "checkout/service.py",
+        "tests/test_checkout.py"
+      ],
+      "retrieved_files": [
+        "legacy/pricing.py",
+        "checkout/pricing.py",
+        "checkout/service.py",
+        "tests/test_checkout.py"
+      ],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.666667,
+        "5": 1.0
+      },
+      "reciprocal_rank": 0.5
+    }
+  ],
+  "aggregate": {
+    "task_count": 10,
+    "mean_recall_at": {
+      "1": 0.391667,
+      "3": 0.941667,
+      "5": 1.0
+    },
+    "mean_reciprocal_rank": 0.95
+  }
+}

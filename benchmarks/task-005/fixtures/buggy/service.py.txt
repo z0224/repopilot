@@ -1,0 +1,18 @@
+from inventory.errors import InsufficientStockError
+
+
+def reserve_inventory(repository, items):
+    """Reserve a list of (sku, quantity) items."""
+    for sku, quantity in items:
+        if quantity <= 0:
+            raise ValueError("quantity must be positive")
+
+        available = repository.available(sku)
+
+        if available < quantity:
+            raise InsufficientStockError(sku)
+
+        repository.set_available(
+            sku,
+            available - quantity,
+        )

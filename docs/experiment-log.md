@@ -323,3 +323,39 @@ Agent 将原有的边验证边修改流程改为三阶段处理：
 - 拒绝原因支持同时返回多条；
 - 验收报告 schema 已升级到版本 7。
 
+
+
+## 10 任务 Repository RAG 评测
+
+Benchmark 从 5 个扩展到 10 个，并新增异常处理、配置污染、测试修改诱导、大文件局部错误和 RAG 易混淆文件。
+
+### 总体结果
+
+| 语言 | Retriever | Recall@1 | Recall@3 | Recall@5 | MRR |
+|---|---|---:|---:|---:|---:|
+| English | Lexical | 0.391667 | 0.941667 | 1.000000 | 0.950000 |
+| English | Semantic | 0.425000 | 0.941667 | 1.000000 | 1.000000 |
+| English | Hybrid | 0.425000 | 0.941667 | 1.000000 | 1.000000 |
+| Chinese | Lexical | 0.000000 | 0.000000 | 0.000000 | 0.000000 |
+| Chinese | Semantic | 0.391667 | 0.941667 | 1.000000 | 0.950000 |
+| Chinese | Hybrid | 0.391667 | 0.941667 | 1.000000 | 0.950000 |
+
+### Task 010 干扰文件实验
+
+Task 010 同时包含：
+
+- `checkout/pricing.py`：当前有效实现；
+- `legacy/pricing.py`：使用相同函数名的旧版实现。
+
+英文 Lexical Retriever 将 legacy 文件排在第一位，正确文件排在第二位，MRR 为 0.5。
+
+英文 Semantic 和 Hybrid Retriever 将正确的 checkout 文件提升到第一位，MRR 为 1.0，使总体 MRR 从 0.95 提升至 1.0。
+
+中文 Semantic 和 Hybrid Retriever 仍将 legacy 文件排在第一位，MRR 为 0.5。这表明当前多语言模型能够完成跨语言代码检索，但对“当前实现”和“旧版实现”的业务语义区分仍然不足。
+
+### 结论
+
+- Semantic Retrieval 改善了英文易混淆文件的首位排名。
+- Lexical Retrieval 无法处理中文自然语言到英文代码的跨语言检索。
+- Hybrid Retrieval 在本组实验中与 Semantic Retrieval 指标相同，没有额外提升。
+- 小规模 Benchmark 上 Recall@5 已达到 1.0，后续实验应重点关注首位排名、Agent 查找步骤和最终修复成功率。

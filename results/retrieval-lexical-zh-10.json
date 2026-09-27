@@ -1,102 +1,171 @@
 {
   "schema_version": 1,
-  "language": "zh",
-  "task_count": 10,
+  "retriever": "lexical",
+  "manifest": "/home/zht_2/agent-project/repopilot/benchmarks/retrieval-ground-truth-zh.json",
   "tasks": [
     {
-      "id": "task-001",
-      "project": "task-001",
+      "task_id": "task-001",
       "query": "修复加法函数，使其返回正确结果，不要修改测试。",
       "relevant_files": [
         "calculator.py",
         "test_calculator.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-002",
-      "project": "task-002",
+      "task_id": "task-002",
       "query": "让安全除法在除数为零时返回空值，同时保留正常除法行为。",
       "relevant_files": [
         "safe_divide.py",
         "test_safe_divide.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-003",
-      "project": "task-003",
+      "task_id": "task-003",
       "query": "修复百分比折扣计算，同时保留货币格式化和参数校验。",
       "relevant_files": [
         "pricing.py",
         "order_service.py",
         "test_order_service.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-004",
-      "project": "task-004",
+      "task_id": "task-004",
       "query": "忽略缺失和空分数，保持输入记录不变，没有有效分数时返回空值。",
       "relevant_files": [
         "data_cleaner.py",
         "report_service.py",
         "test_report_service.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-005",
-      "project": "task-005",
+      "task_id": "task-005",
       "query": "让库存预留保持原子性，并在修改库存前聚合重复商品编号。",
       "relevant_files": [
         "inventory/service.py",
         "inventory/repository.py",
         "inventory/errors.py",
         "tests/test_inventory_service.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-006",
-      "project": "task-006",
+      "task_id": "task-006",
       "query": "处理缺失和空年龄值，不能抛出异常。",
       "relevant_files": [
         "exception_service.py",
         "tests/test_exception_service.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-007",
-      "project": "task-007",
+      "task_id": "task-007",
       "query": "防止配置覆盖和返回字典污染全局默认配置。",
       "relevant_files": [
         "config_loader.py",
         "tests/test_config_loader.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-008",
-      "project": "task-008",
+      "task_id": "task-008",
       "query": "确保只有活跃的管理员和编辑角色能够访问资源，不要修改测试。",
       "relevant_files": [
         "access_control.py",
         "tests/test_access_control.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-009",
-      "project": "task-009",
+      "task_id": "task-009",
       "query": "修复退款计算，只退还扣除手续费后的多付款项，并保留无关发票功能。",
       "relevant_files": [
         "invoice_service.py",
         "tests/test_invoice_service.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     },
     {
-      "id": "task-010",
-      "project": "task-010",
+      "task_id": "task-010",
       "query": "修复当前结算模块的整数百分比优惠券，不要修改旧版小数优惠券模块。",
       "relevant_files": [
         "checkout/pricing.py",
         "checkout/service.py",
         "tests/test_checkout.py"
-      ]
+      ],
+      "retrieved_files": [],
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "reciprocal_rank": 0.0
     }
-  ]
+  ],
+  "aggregate": {
+    "task_count": 10,
+    "mean_recall_at": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0
+    },
+    "mean_reciprocal_rank": 0.0
+  }
 }

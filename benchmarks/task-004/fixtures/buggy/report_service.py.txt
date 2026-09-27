@@ -1,0 +1,7 @@
+from data_cleaner import valid_scores
+
+
+def average_score(records):
+    """Return the average score."""
+    scores = valid_scores(records)
+    return round(sum(scores) / len(scores), 2)
