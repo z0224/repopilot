@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
+import shlex
+import subprocess
+import sys
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -49,7 +53,7 @@ class PreparedExperiment:
     task: str
     test_command: str
     relevant_files: tuple[str, ...]
-
+    expected_baseline: dict[str, int]
 
 def get_experiment_group(name: str) -> ExperimentGroup:
     try:
@@ -192,6 +196,9 @@ def prepare_experiment_workspace(
         task=task["task"],
         test_command=task["test_command"],
         relevant_files=tuple(task["relevant_files"]),
+        expected_baseline=dict(
+            task.get("expected_baseline", {})
+        ),
     )
 @dataclass(frozen=True)
 class ExperimentPlanItem:
@@ -368,6 +375,15 @@ def prepare_experiment_batch(
             output_root,
         )
 
+        baseline = run_experiment_baseline(
+            prepared
+        )
+        status = (
+            "baseline_verified"
+            if baseline.matches_expected
+            else "baseline_mismatch"
+        )
+
         runs.append({
             "run_id": item.run_id,
             "task_id": item.task_id,
@@ -377,13 +393,25 @@ def prepare_experiment_batch(
                 item.group.use_safety_requirements
             ),
             "workspace": str(prepared.workspace),
-            "status": "prepared",
+            "status": status,
+            "baseline": baseline.to_dict(),
         })
 
+    verified_count = sum(
+        run["status"] == "baseline_verified"
+        for run in runs
+    )
+    mismatch_count = sum(
+        run["status"] == "baseline_mismatch"
+        for run in runs
+    )
+
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "dry_run": True,
         "run_count": len(runs),
+        "baseline_verified_count": verified_count,
+        "baseline_mismatch_count": mismatch_count,
         "runs": runs,
     }
 
@@ -399,3 +427,120 @@ def prepare_experiment_batch(
     )
 
     return batch_path, payload
+@dataclass(frozen=True)
+class BaselineResult:
+    command: tuple[str, ...]
+    returncode: int
+    passed: int
+    failed: int
+    errors: int
+    expected_passed: int
+    expected_failed: int
+    matches_expected: bool
+    stdout: str
+    stderr: str
+
+    def to_dict(self):
+        return {
+            "command": list(self.command),
+            "returncode": self.returncode,
+            "passed": self.passed,
+            "failed": self.failed,
+            "errors": self.errors,
+            "expected_passed": self.expected_passed,
+            "expected_failed": self.expected_failed,
+            "matches_expected": self.matches_expected,
+            "stdout": self.stdout,
+            "stderr": self.stderr,
+        }
+
+
+def parse_pytest_summary(output: str):
+    counts = {
+        "passed": 0,
+        "failed": 0,
+        "errors": 0,
+    }
+
+    pattern = re.compile(
+        r"(\d+)\s+(passed|failed|errors?)\b"
+    )
+
+    for count, label in pattern.findall(output):
+        if label in {"error", "errors"}:
+            label = "errors"
+
+        counts[label] = int(count)
+
+    return counts
+
+
+def run_experiment_baseline(
+    prepared: PreparedExperiment,
+    *,
+    runner=subprocess.run,
+):
+    command = list(
+        shlex.split(prepared.test_command)
+    )
+
+    if not command:
+        raise ValueError(
+            "baseline test command must not be empty"
+        )
+
+    if command[0] in {"python", "python3"}:
+        command[0] = sys.executable
+
+    command = tuple(command)
+    completed = runner(
+        list(command),
+        cwd=str(prepared.workspace),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    combined_output = "\n".join(
+        part
+        for part in (
+            completed.stdout,
+            completed.stderr,
+        )
+        if part
+    )
+    counts = parse_pytest_summary(
+        combined_output
+    )
+
+    expected_passed = int(
+        prepared.expected_baseline.get(
+            "passed",
+            0,
+        )
+    )
+    expected_failed = int(
+        prepared.expected_baseline.get(
+            "failed",
+            0,
+        )
+    )
+
+    matches_expected = (
+        counts["passed"] == expected_passed
+        and counts["failed"] == expected_failed
+        and counts["errors"] == 0
+    )
+
+    return BaselineResult(
+        command=command,
+        returncode=completed.returncode,
+        passed=counts["passed"],
+        failed=counts["failed"],
+        errors=counts["errors"],
+        expected_passed=expected_passed,
+        expected_failed=expected_failed,
+        matches_expected=matches_expected,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+    )

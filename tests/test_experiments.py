@@ -10,6 +10,8 @@ from repopilot.experiments import (
     get_experiment_group,
     prepare_experiment_batch,
     prepare_experiment_workspace,
+    parse_pytest_summary,
+    run_experiment_baseline,
 )
 
 
@@ -247,6 +249,22 @@ def test_prepares_filtered_experiment_batch(tmp_path):
     assert batch_path.is_file()
     assert payload["dry_run"] is True
     assert payload["run_count"] == 2
+    assert (
+        payload["baseline_verified_count"]
+        == 2
+    )
+    assert (
+        payload["baseline_mismatch_count"]
+        == 0
+    )
+    assert {
+        run["status"]
+        for run in payload["runs"]
+    } == {"baseline_verified"}
+    assert all(
+        run["baseline"]["matches_expected"]
+        for run in payload["runs"]
+    )
     assert {
         run["group"]
         for run in payload["runs"]
@@ -287,3 +305,34 @@ def test_run_experiments_cli_dry_run(tmp_path):
     assert "Dry run: True" in result.stdout
     assert "Prepared runs: 1" in result.stdout
     assert (tmp_path / "batch.json").is_file()
+    assert "Baseline verified: 1" in result.stdout
+    assert "Baseline mismatches: 0" in result.stdout
+def test_parses_pytest_summary():
+    counts = parse_pytest_summary(
+        "3 failed, 5 passed in 0.02s"
+    )
+
+    assert counts == {
+        "passed": 5,
+        "failed": 3,
+        "errors": 0,
+    }
+
+
+def test_runs_and_validates_expected_baseline(
+    tmp_path,
+):
+    prepared = prepare_experiment_workspace(
+        MANIFEST,
+        "task-001",
+        "baseline",
+        tmp_path,
+    )
+
+    result = run_experiment_baseline(prepared)
+
+    assert result.returncode == 1
+    assert result.passed == 0
+    assert result.failed == 1
+    assert result.errors == 0
+    assert result.matches_expected is True

@@ -392,6 +392,14 @@ def main():
             f"Prepared runs: "
             f"{payload['run_count']}"
         )
+        print(
+            "Baseline verified: "
+            f"{payload['baseline_verified_count']}"
+        )
+        print(
+            "Baseline mismatches: "
+            f"{payload['baseline_mismatch_count']}"
+        )
         print(f"Batch saved to: {batch_path}")
         return
     if arguments.command == "plan-experiments":
