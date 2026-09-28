@@ -1,5 +1,7 @@
 # RepoPilot
 
+[![CI](https://github.com/z0224/repopilot/actions/workflows/ci.yml/badge.svg)](https://github.com/z0224/repopilot/actions/workflows/ci.yml)
+
 **Repository-aware context retrieval, execution auditing, and deterministic
 policy checks for AI coding agents.**
 
