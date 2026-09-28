@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-
+from repopilot.adapters.base import AgentRunResult
 from repopilot.adapters import MiniSWEAgentAdapter
 from repopilot.context import build_context_bundle
 from repopilot.retrieval import chunk_python_source
@@ -133,3 +133,28 @@ def test_can_disable_rag_and_safe_prompt():
     assert prompt.strip() == "Fix the incorrect total calculation."
     assert "retrieved context" not in prompt
     assert "execution requirements" not in prompt
+def test_agent_result_uses_trajectory_terminal_status(
+    tmp_path,
+):
+    failed = AgentRunResult(
+        command=("mini",),
+        returncode=0,
+        stdout="",
+        stderr="",
+        trajectory_path=tmp_path / "failed.json",
+        context_path=tmp_path / "failed.md",
+        terminal_status="RepeatedFormatError",
+    )
+    submitted = AgentRunResult(
+        command=("mini",),
+        returncode=0,
+        stdout="",
+        stderr="",
+        trajectory_path=tmp_path / "submitted.json",
+        context_path=tmp_path / "submitted.md",
+        terminal_status="Submitted",
+    )
+
+    assert failed.succeeded is False
+    assert failed.to_dict()["succeeded"] is False
+    assert submitted.succeeded is True

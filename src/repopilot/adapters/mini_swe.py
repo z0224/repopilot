@@ -1,7 +1,7 @@
 """mini-SWE-agent subprocess adapter."""
 
 from __future__ import annotations
-
+from ..trajectory import parse_trajectory
 import subprocess
 from pathlib import Path
 
@@ -152,6 +152,13 @@ class MiniSWEAgentAdapter(AgentAdapter):
                 f"{self.executable}"
             ) from error
 
+        terminal_status = None
+
+        if trajectory_path.is_file():
+            terminal_status = parse_trajectory(
+                trajectory_path
+            ).exit_status
+
         return AgentRunResult(
             command=command,
             returncode=completed.returncode,
@@ -159,4 +166,5 @@ class MiniSWEAgentAdapter(AgentAdapter):
             stderr=completed.stderr,
             trajectory_path=trajectory_path,
             context_path=context_path,
+            terminal_status=terminal_status,
         )

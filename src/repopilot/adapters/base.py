@@ -15,15 +15,23 @@ class AgentRunResult:
     stderr: str
     trajectory_path: Path
     context_path: Path
+    terminal_status: str | None = None
 
     @property
     def succeeded(self):
-        return self.returncode == 0
+        if self.returncode != 0:
+            return False
+
+        if self.terminal_status is None:
+            return True
+
+        return self.terminal_status == "Submitted"
 
     def to_dict(self):
         return {
             "command": list(self.command),
             "returncode": self.returncode,
+            "terminal_status": self.terminal_status,
             "stdout": self.stdout,
             "stderr": self.stderr,
             "trajectory_path": str(self.trajectory_path),
