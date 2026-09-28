@@ -234,6 +234,16 @@ def build_parser():
         action="store_true",
         help="Prepare context and command without running the agent.",
     )
+    run_parser.add_argument(
+        "--no-rag",
+        action="store_true",
+        help="Run without injecting retrieved context.",
+    )
+    run_parser.add_argument(
+        "--no-safety-requirements",
+        action="store_true",
+        help="Run without RepoPilot safety requirements.",
+    )
 
     trajectory_parser = subparsers.add_parser(
         "inspect-trajectory",
@@ -506,6 +516,8 @@ def main():
         project_path = Path(
             arguments.project
         ).expanduser().resolve()
+        if arguments.no_rag:
+            arguments.retriever = "lexical"
 
         index = index_repository(project_path)
 
@@ -537,6 +549,8 @@ def main():
             max_chars=arguments.max_chars,
             max_chunks=arguments.top_k,
         )
+        if arguments.no_rag:
+            bundle = None
 
         if arguments.output:
             trajectory_path = Path(
@@ -567,6 +581,9 @@ def main():
             executable=arguments.mini_executable,
             config_paths=config_paths,
             model=arguments.agent_model,
+            include_safety_requirements=(
+                not arguments.no_safety_requirements
+            ),
         )
 
         if arguments.dry_run:
@@ -604,15 +621,25 @@ def main():
             )
 
             print("Dry run: True")
-            print(f"Retriever: {arguments.retriever}")
             print(
-                f"Retrieved chunks: {len(results)}"
+                "Retriever: "
+                + (
+                    "disabled"
+                    if arguments.no_rag
+                    else arguments.retriever
+                )
             )
             print(
-                f"Included chunks: {len(bundle.items)}"
+                f"Retrieved chunks: "
+                f"{0 if arguments.no_rag else len(results)}"
             )
             print(
-                f"Context characters: {bundle.char_count}"
+                f"Included chunks: "
+                f"{0 if bundle is None else len(bundle.items)}"
+            )
+            print(
+                f"Context characters: "
+                f"{0 if bundle is None else bundle.char_count}"
             )
             print(f"Context saved to: {context_path}")
             print(

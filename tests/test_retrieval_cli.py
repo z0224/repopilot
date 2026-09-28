@@ -246,3 +246,37 @@ def test_run_command_supports_dry_run(tmp_path):
     assert "Fix total calculation" in prompt
     assert "service.py::calculate_total" in prompt
     assert "Run the existing tests" in prompt
+def test_run_dry_run_can_disable_rag_and_safety(
+    tmp_path,
+):
+    project = create_project(tmp_path)
+    trajectory = tmp_path / "baseline.traj.json"
+
+    result = run_cli(
+        "run",
+        project,
+        "--task",
+        "Fix total calculation",
+        "--mini-executable",
+        "/missing/mini",
+        "--output",
+        trajectory,
+        "--no-rag",
+        "--no-safety-requirements",
+        "--dry-run",
+    )
+
+    assert result.returncode == 0
+    assert "Retriever: disabled" in result.stdout
+    assert "Included chunks: 0" in result.stdout
+
+    prompt_path = (
+        tmp_path / "baseline.traj.context.md"
+    )
+    prompt = prompt_path.read_text(
+        encoding="utf-8"
+    )
+
+    assert prompt.strip() == "Fix total calculation"
+    assert "retrieved context" not in prompt
+    assert "execution requirements" not in prompt
