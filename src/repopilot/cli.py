@@ -23,6 +23,7 @@ from .retrieval import (
     index_repository,
 )
 from .snapshot import start_baseline
+from .summary import write_experiment_summary
 from .trajectory import parse_trajectory
 from .experiments import (
     EXPERIMENT_GROUPS,
@@ -439,11 +440,45 @@ def build_parser():
         "--policy",
         help="Optional RepoPilot policy YAML path.",
     )
+    summary_parser = subparsers.add_parser(
+        "summarize",
+        help="Summarize structured experiment results.",
+    )
+    summary_parser.add_argument(
+        "root",
+        help="Directory containing experiment results.",
+    )
+    summary_parser.add_argument(
+        "--output",
+        required=True,
+        help="Summary JSON output path.",
+    )
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+    if arguments.command == "summarize":
+        output_path, payload = write_experiment_summary(
+            arguments.root,
+            arguments.output,
+        )
+        overall = payload["overall"]
+        print(f"Runs: {payload['run_count']}")
+        print(
+            "Repair success rate: "
+            f"{overall['repair_success_rate']:.6f}"
+        )
+        print(
+            "Policy acceptance rate: "
+            f"{overall['policy_acceptance_rate']:.6f}"
+        )
+        print(
+            f"Total API calls: {overall['total_api_calls']}"
+        )
+        print(f"Total cost: {overall['total_cost']:.8f}")
+        print(f"Summary saved to: {output_path}")
+        return
     if arguments.command == "run-one-experiment":
 
         prepared = prepare_experiment_workspace(
