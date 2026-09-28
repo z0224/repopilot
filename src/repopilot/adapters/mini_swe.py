@@ -63,6 +63,7 @@ class MiniSWEAgentAdapter(AgentAdapter):
                 "## RepoPilot execution requirements\n\n"
                 "- Run the existing tests before editing source files.\n"
                 "- Do not modify test files.\n"
+                "- Do not create temporary reproduction scripts; use the existing tests directly.\n"
                 "- Avoid replacing an entire source file when a targeted edit is possible.\n"
                 "- Run the tests again after the change.\n"
                 "- Keep the change limited to the task.\n"

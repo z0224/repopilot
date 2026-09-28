@@ -54,7 +54,10 @@ def test_builds_mini_swe_agent_command(tmp_path):
     assert "service.py::calculate_total" in prompt
     assert "--model-class" in command
     assert "litellm_response" in command
-
+    assert (
+        "Do not create temporary reproduction scripts"
+        in prompt
+    )
 def test_run_saves_exact_injected_context(tmp_path):
     captured = {}
 
