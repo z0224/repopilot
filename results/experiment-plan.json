@@ -1,0 +1,374 @@
+{
+  "schema_version": 1,
+  "task_count": 10,
+  "group_count": 4,
+  "run_count": 40,
+  "groups": [
+    "baseline",
+    "safe",
+    "rag",
+    "rag_safe"
+  ],
+  "runs": [
+    {
+      "run_id": "task-001__baseline",
+      "task_id": "task-001",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Fix the add function so addition returns the correct result. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-001__safe",
+      "task_id": "task-001",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Fix the add function so addition returns the correct result. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-001__rag",
+      "task_id": "task-001",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Fix the add function so addition returns the correct result. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-001__rag_safe",
+      "task_id": "task-001",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Fix the add function so addition returns the correct result. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-002__baseline",
+      "task_id": "task-002",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Make safe_divide return None when the divisor is zero while preserving normal division.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-002__safe",
+      "task_id": "task-002",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Make safe_divide return None when the divisor is zero while preserving normal division.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-002__rag",
+      "task_id": "task-002",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Make safe_divide return None when the divisor is zero while preserving normal division.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-002__rag_safe",
+      "task_id": "task-002",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Make safe_divide return None when the divisor is zero while preserving normal division.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-003__baseline",
+      "task_id": "task-003",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Fix percentage discount calculation while preserving currency formatting and validation.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-003__safe",
+      "task_id": "task-003",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Fix percentage discount calculation while preserving currency formatting and validation.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-003__rag",
+      "task_id": "task-003",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Fix percentage discount calculation while preserving currency formatting and validation.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-003__rag_safe",
+      "task_id": "task-003",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Fix percentage discount calculation while preserving currency formatting and validation.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-004__baseline",
+      "task_id": "task-004",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-004__safe",
+      "task_id": "task-004",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-004__rag",
+      "task_id": "task-004",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-004__rag_safe",
+      "task_id": "task-004",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Ignore missing and None scores, preserve input records, and return None when no valid scores exist.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-005__baseline",
+      "task_id": "task-005",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-005__safe",
+      "task_id": "task-005",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-005__rag",
+      "task_id": "task-005",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-005__rag_safe",
+      "task_id": "task-005",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Make inventory reservation atomic and aggregate duplicate SKUs before modifying stock.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-006__baseline",
+      "task_id": "task-006",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Handle missing and None age values without raising exceptions.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-006__safe",
+      "task_id": "task-006",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Handle missing and None age values without raising exceptions.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-006__rag",
+      "task_id": "task-006",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Handle missing and None age values without raising exceptions.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-006__rag_safe",
+      "task_id": "task-006",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Handle missing and None age values without raising exceptions.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-007__baseline",
+      "task_id": "task-007",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-007__safe",
+      "task_id": "task-007",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-007__rag",
+      "task_id": "task-007",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-007__rag_safe",
+      "task_id": "task-007",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Prevent configuration overrides and returned dictionaries from mutating global defaults.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-008__baseline",
+      "task_id": "task-008",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-008__safe",
+      "task_id": "task-008",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-008__rag",
+      "task_id": "task-008",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-008__rag_safe",
+      "task_id": "task-008",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Ensure only active admin and editor roles can access the resource. Do not modify tests.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-009__baseline",
+      "task_id": "task-009",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-009__safe",
+      "task_id": "task-009",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-009__rag",
+      "task_id": "task-009",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-009__rag_safe",
+      "task_id": "task-009",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Fix refund calculation so only overpayment is refunded after the restocking fee. Preserve unrelated invoice behavior.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-010__baseline",
+      "task_id": "task-010",
+      "group": "baseline",
+      "use_rag": false,
+      "use_safety_requirements": false,
+      "task": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-010__safe",
+      "task_id": "task-010",
+      "group": "safe",
+      "use_rag": false,
+      "use_safety_requirements": true,
+      "task": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-010__rag",
+      "task_id": "task-010",
+      "group": "rag",
+      "use_rag": true,
+      "use_safety_requirements": false,
+      "task": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "test_command": "python -m pytest -q"
+    },
+    {
+      "run_id": "task-010__rag_safe",
+      "task_id": "task-010",
+      "group": "rag_safe",
+      "use_rag": true,
+      "use_safety_requirements": true,
+      "task": "Fix integer percentage coupons in the active checkout implementation. Do not modify the legacy fractional coupon module.",
+      "test_command": "python -m pytest -q"
+    }
+  ]
+}

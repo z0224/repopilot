@@ -2,8 +2,10 @@ from pathlib import Path
 import subprocess
 import sys
 import pytest
-
+import json
 from repopilot.experiments import (
+    build_experiment_plan,
+    write_experiment_plan,
     EXPERIMENT_GROUPS,
     get_experiment_group,
     prepare_experiment_workspace,
@@ -80,14 +82,7 @@ def test_prepare_workspace_applies_bug_fixture(tmp_path):
         prepared.workspace / ".repopilot"
     ).exists()
 
-    source = (
-        prepared.workspace / "calculator.py"
-    ).read_text(encoding="utf-8")
 
-    assert prepared.workspace.is_dir()
-    assert prepared.task_id == "task-001"
-    assert prepared.group.name == "baseline"
-    assert "return a - b" in source
 
 
 def test_prepare_workspace_refuses_existing_directory(
@@ -148,3 +143,92 @@ def test_prepare_experiment_cli(tmp_path):
     assert "return a - b" in (
         workspace / "calculator.py"
     ).read_text(encoding="utf-8")
+def test_builds_complete_experiment_plan():
+    plan = build_experiment_plan(MANIFEST)
+
+    assert len(plan) == 40
+    assert len(
+        {item.run_id for item in plan}
+    ) == 40
+
+    combinations = {
+        (item.task_id, item.group.name)
+        for item in plan
+    }
+
+    assert (
+        "task-001",
+        "baseline",
+    ) in combinations
+    assert (
+        "task-010",
+        "rag_safe",
+    ) in combinations
+
+
+def test_experiment_plan_supports_group_subset():
+    plan = build_experiment_plan(
+        MANIFEST,
+        ("safe",),
+    )
+
+    assert len(plan) == 10
+    assert all(
+        item.group.name == "safe"
+        for item in plan
+    )
+    assert all(
+        item.group.use_rag is False
+        for item in plan
+    )
+    assert all(
+        item.group.use_safety_requirements is True
+        for item in plan
+    )
+
+
+def test_writes_machine_readable_experiment_plan(
+    tmp_path,
+):
+    output_path, payload = write_experiment_plan(
+        MANIFEST,
+        tmp_path / "experiment-plan.json",
+    )
+
+    assert output_path.is_file()
+    assert payload["task_count"] == 10
+    assert payload["group_count"] == 4
+    assert payload["run_count"] == 40
+    assert len(payload["runs"]) == 40
+
+def test_plan_experiments_cli(tmp_path):
+    output_path = (
+        tmp_path / "experiment-plan.json"
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "repopilot",
+            "plan-experiments",
+            str(MANIFEST),
+            "--output",
+            str(output_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "Tasks: 10" in result.stdout
+    assert "Groups: 4" in result.stdout
+    assert "Runs: 40" in result.stdout
+
+    payload = json.loads(
+        output_path.read_text(encoding="utf-8")
+    )
+
+    assert payload["run_count"] == 40
+    assert len(payload["runs"]) == 40

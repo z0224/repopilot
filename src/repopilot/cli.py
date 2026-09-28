@@ -24,6 +24,7 @@ from .trajectory import parse_trajectory
 from .experiments import (
     EXPERIMENT_GROUPS,
     prepare_experiment_workspace,
+    write_experiment_plan,
 )
 
 def positive_int(value):
@@ -37,7 +38,7 @@ def positive_int(value):
     if parsed < 1:
         raise argparse.ArgumentTypeError(
             "must be at least 1"
-        )
+       )
 
     return parsed
 
@@ -301,11 +302,46 @@ def build_parser():
         required=True,
         help="Root directory for experiment workspaces.",
     )
+    plan_parser = subparsers.add_parser(
+        "plan-experiments",
+        help="Write a reproducible experiment plan.",
+    )
+    plan_parser.add_argument(
+        "manifest",
+        help="Path to the benchmark manifest.",
+    )
+    plan_parser.add_argument(
+        "--output",
+        required=True,
+        help="JSON experiment plan output path.",
+    )
+    plan_parser.add_argument(
+        "--group",
+        action="append",
+        choices=tuple(EXPERIMENT_GROUPS),
+        help=(
+            "Limit the plan to a group. "
+            "May be supplied multiple times."
+        ),
+    )
+
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+    if arguments.command == "plan-experiments":
+        output_path, payload = write_experiment_plan(
+            arguments.manifest,
+            arguments.output,
+            arguments.group,
+        )
+
+        print(f"Tasks: {payload['task_count']}")
+        print(f"Groups: {payload['group_count']}")
+        print(f"Runs: {payload['run_count']}")
+        print(f"Plan saved to: {output_path}")
+        return
     if arguments.command == "prepare-experiment":
         prepared = prepare_experiment_workspace(
             arguments.manifest,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -192,3 +193,114 @@ def prepare_experiment_workspace(
         test_command=task["test_command"],
         relevant_files=tuple(task["relevant_files"]),
     )
+@dataclass(frozen=True)
+class ExperimentPlanItem:
+    task_id: str
+    group: ExperimentGroup
+    task: str
+    test_command: str
+
+    @property
+    def run_id(self) -> str:
+        return f"{self.task_id}__{self.group.name}"
+
+    def to_dict(self):
+        return {
+            "run_id": self.run_id,
+            "task_id": self.task_id,
+            "group": self.group.name,
+            "use_rag": self.group.use_rag,
+            "use_safety_requirements": (
+                self.group.use_safety_requirements
+            ),
+            "task": self.task,
+            "test_command": self.test_command,
+        }
+
+
+def build_experiment_plan(
+    manifest_path,
+    group_names=None,
+):
+    manifest = load_benchmark_manifest(manifest_path)
+
+    if group_names is None:
+        group_names = tuple(EXPERIMENT_GROUPS)
+    else:
+        group_names = tuple(group_names)
+
+    if not group_names:
+        raise ValueError(
+            "at least one experiment group is required"
+        )
+
+    if len(set(group_names)) != len(group_names):
+        raise ValueError(
+            "experiment groups must not be duplicated"
+        )
+
+    groups = tuple(
+        get_experiment_group(name)
+        for name in group_names
+    )
+
+    return tuple(
+        ExperimentPlanItem(
+            task_id=task["id"],
+            group=group,
+            task=task["task"],
+            test_command=task["test_command"],
+        )
+        for task in manifest["tasks"]
+        for group in groups
+    )
+
+
+def write_experiment_plan(
+    manifest_path,
+    output_path,
+    group_names=None,
+):
+    plan = build_experiment_plan(
+        manifest_path,
+        group_names,
+    )
+    output_path = Path(
+        output_path
+    ).expanduser().resolve()
+
+    groups = []
+
+    for item in plan:
+        if item.group.name not in groups:
+            groups.append(item.group.name)
+
+    payload = {
+        "schema_version": 1,
+        "task_count": len(
+            {item.task_id for item in plan}
+        ),
+        "group_count": len(groups),
+        "run_count": len(plan),
+        "groups": groups,
+        "runs": [
+            item.to_dict()
+            for item in plan
+        ],
+    }
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    output_path.write_text(
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    return output_path, payload
