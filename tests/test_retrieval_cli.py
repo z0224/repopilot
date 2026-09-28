@@ -230,6 +230,7 @@ def test_run_command_supports_dry_run(tmp_path):
     assert "Dry run: True" in result.stdout
     assert "Retriever: lexical" in result.stdout
     assert "<prompt saved to" in result.stdout
+    assert "--model-class litellm_response" in result.stdout
     assert not trajectory.exists()
 
     context_path = (
