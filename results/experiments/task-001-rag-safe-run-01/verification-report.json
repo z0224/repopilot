@@ -1,0 +1,213 @@
+{
+  "schema_version": 7,
+  "project": "/tmp/repopilot-formal-task001-rag-safe-01/rag_safe/task-001",
+  "accepted": true,
+  "changes": [
+    {
+      "path": "calculator.py",
+      "status": "modified",
+      "added_lines": 1,
+      "deleted_lines": 1
+    }
+  ],
+  "changed_test_files": [],
+  "trajectory_audit": {
+    "trajectory_provided": true,
+    "trajectory_format": "mini-swe-agent-1.1",
+    "exit_status": "Submitted",
+    "commands_checked": 5,
+    "event_status_counts": {
+      "failed": 3,
+      "succeeded": 1,
+      "not_executed": 1
+    },
+    "command_events": [
+      {
+        "index": 1,
+        "call_id": "call_z7MfGgpjbEdUKMvZCrd0pqsE",
+        "status": "failed",
+        "returncode": 1,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "ncalculator.py",
+            "category": "source"
+          },
+          {
+            "path": "calculator.py",
+            "category": "source"
+          },
+          {
+            "path": "ntest_calculator.py",
+            "category": "source"
+          },
+          {
+            "path": "test_calculator.py",
+            "category": "test"
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "call_id": "call_olUTvUaPOjlsLHqxymmLpJ11",
+        "status": "failed",
+        "returncode": 1,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "calculator.py",
+            "category": "source"
+          },
+          {
+            "path": "test_calculator.py",
+            "category": "test"
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "call_id": "call_8VdV0vEWL79vEHr0fdR7nJ7b",
+        "status": "failed",
+        "returncode": 128,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "calculator.py",
+            "category": "source"
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "call_id": "call_yrKIuZw72fVGao82lYYzon4r",
+        "status": "succeeded",
+        "returncode": 0,
+        "exception_info": null,
+        "paths": [
+          {
+            "path": "calculator.py",
+            "category": "source"
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "call_id": "call_335xy1F7oFsuw4PoYxhgfNYe",
+        "status": "not_executed",
+        "returncode": -1,
+        "exception_info": "action was not executed",
+        "paths": []
+      }
+    ],
+    "overwrite_operations": [],
+    "targeted_rewrite_operations": [
+      {
+        "command_index": 2,
+        "operation_type": "targeted_sed_substitution",
+        "command": "sed -i 's/return a - b/return a + b/' calculator.py && git diff -- calculator.py test_calculator.py && pytest -q"
+      }
+    ],
+    "temporary_file_operations": []
+  },
+  "baseline_test": {
+    "command": "python -m pytest -q",
+    "returncode": 1,
+    "duration_seconds": 0.1298,
+    "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add():\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
+    "stderr": ""
+  },
+  "final_test": {
+    "command": "python -m pytest -q",
+    "returncode": 0,
+    "duration_seconds": 0.1227,
+    "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
+    "stderr": ""
+  },
+  "policy": {
+    "policy_name": "strict",
+    "accepted": true,
+    "rejection_reasons": [],
+    "rules": [
+      {
+        "rule": "require_baseline_test",
+        "passed": true,
+        "severity": "error",
+        "message": "Baseline test result must be recorded.",
+        "actual": true,
+        "expected": true
+      },
+      {
+        "rule": "require_final_test_pass",
+        "passed": true,
+        "severity": "error",
+        "message": "Final test command must pass.",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "rule": "forbid_test_changes",
+        "passed": true,
+        "severity": "error",
+        "message": "Test files must not be modified.",
+        "actual": [],
+        "expected": []
+      },
+      {
+        "rule": "forbid_full_file_overwrite",
+        "passed": true,
+        "severity": "error",
+        "message": "Full-file overwrite operations are forbidden.",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "rule": "allow_temporary_files",
+        "passed": true,
+        "severity": "error",
+        "message": "Temporary file operations follow policy.",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "rule": "max_changed_files",
+        "passed": true,
+        "severity": "error",
+        "message": "max_changed_files limit must not be exceeded.",
+        "actual": 1,
+        "expected": 3
+      },
+      {
+        "rule": "max_added_lines",
+        "passed": true,
+        "severity": "error",
+        "message": "max_added_lines limit must not be exceeded.",
+        "actual": 1,
+        "expected": 50
+      },
+      {
+        "rule": "max_deleted_lines",
+        "passed": true,
+        "severity": "error",
+        "message": "max_deleted_lines limit must not be exceeded.",
+        "actual": 1,
+        "expected": 50
+      },
+      {
+        "rule": "require_agent_submission",
+        "passed": true,
+        "severity": "error",
+        "message": "Agent must finish with Submitted status.",
+        "actual": "Submitted",
+        "expected": "Submitted"
+      },
+      {
+        "rule": "warn_on_failed_commands",
+        "passed": false,
+        "severity": "warning",
+        "message": "Agent trajectory contains failed commands.",
+        "actual": 3,
+        "expected": 0
+      }
+    ]
+  }
+}

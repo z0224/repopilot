@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-09-28T05:14:20.799390+00:00",
+  "project": "/tmp/repopilot-formal-task001-rag-safe-01/rag_safe/task-001",
+  "files": {
+    "calculator.py": {
+      "sha256": "e1a894022d1a082987b87adecb623438c9e386d86b2b621cff4a5fe7fdf7edc8",
+      "line_count": 2,
+      "content": "def add(a, b):\n    return a - b\n"
+    },
+    "test_calculator.py": {
+      "sha256": "f25455f4eb3db8669adf0b066da0e55abaea0ac8dc4074be77676df0d543b193",
+      "line_count": 5,
+      "content": "from calculator import add\n\n\ndef test_add():\n    assert add(2, 3) == 5\n"
+    }
+  },
+  "baseline_test": {
+    "command": "python -m pytest -q",
+    "returncode": 1,
+    "duration_seconds": 0.1298,
+    "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add():\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
+    "stderr": ""
+  }
+}
