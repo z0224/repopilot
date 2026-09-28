@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
 import hashlib
 import json
 import shlex
@@ -56,8 +57,16 @@ def run_test_command(project, command):
     """Run a controlled local test command and capture its result."""
     started_at = time.perf_counter()
 
+    command_parts = shlex.split(command)
+
+    if (
+        command_parts
+        and command_parts[0] in {"python", "python3"}
+    ):
+        command_parts[0] = sys.executable
+
     completed = subprocess.run(
-        shlex.split(command),
+        command_parts,
         cwd=project,
         capture_output=True,
         text=True,
