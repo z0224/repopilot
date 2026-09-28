@@ -8,6 +8,7 @@ from repopilot.experiments import (
     write_experiment_plan,
     EXPERIMENT_GROUPS,
     get_experiment_group,
+    prepare_experiment_batch,
     prepare_experiment_workspace,
 )
 
@@ -232,3 +233,57 @@ def test_plan_experiments_cli(tmp_path):
 
     assert payload["run_count"] == 40
     assert len(payload["runs"]) == 40
+def test_prepares_filtered_experiment_batch(tmp_path):
+    batch_path, payload = (
+        prepare_experiment_batch(
+            MANIFEST,
+            tmp_path,
+            group_names=("baseline", "safe"),
+            task_ids=("task-001",),
+            limit=2,
+        )
+    )
+
+    assert batch_path.is_file()
+    assert payload["dry_run"] is True
+    assert payload["run_count"] == 2
+    assert {
+        run["group"]
+        for run in payload["runs"]
+    } == {"baseline", "safe"}
+
+    assert (
+        tmp_path
+        / "baseline"
+        / "task-001"
+        / "calculator.py"
+    ).is_file()
+
+
+def test_run_experiments_cli_dry_run(tmp_path):
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "repopilot",
+            "run-experiments",
+            str(MANIFEST),
+            "--output-root",
+            str(tmp_path),
+            "--task",
+            "task-001",
+            "--group",
+            "baseline",
+            "--limit",
+            "1",
+            "--dry-run",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "Dry run: True" in result.stdout
+    assert "Prepared runs: 1" in result.stdout
+    assert (tmp_path / "batch.json").is_file()

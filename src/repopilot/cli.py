@@ -25,6 +25,7 @@ from .experiments import (
     EXPERIMENT_GROUPS,
     prepare_experiment_workspace,
     write_experiment_plan,
+    prepare_experiment_batch,
 )
 
 def positive_int(value):
@@ -324,12 +325,75 @@ def build_parser():
             "May be supplied multiple times."
         ),
     )
-
+    batch_parser = subparsers.add_parser(
+        "run-experiments",
+        help="Prepare and run benchmark experiments.",
+    )
+    batch_parser.add_argument(
+        "manifest",
+        help="Path to the benchmark manifest.",
+    )
+    batch_parser.add_argument(
+        "--output-root",
+        required=True,
+        help="Root directory for experiment outputs.",
+    )
+    batch_parser.add_argument(
+        "--task",
+        action="append",
+        help=(
+            "Limit execution to a task id. "
+            "May be supplied multiple times."
+        ),
+    )
+    batch_parser.add_argument(
+        "--group",
+        action="append",
+        choices=tuple(EXPERIMENT_GROUPS),
+        help=(
+            "Limit execution to a group. "
+            "May be supplied multiple times."
+        ),
+    )
+    batch_parser.add_argument(
+        "--limit",
+        type=positive_int,
+        help="Maximum number of runs.",
+    )
+    batch_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Prepare workspaces without running agents.",
+    )
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+    if arguments.command == "run-experiments":
+        if not arguments.dry_run:
+            raise SystemExit(
+                "run-experiments currently requires "
+                "--dry-run"
+            )
+
+        batch_path, payload = (
+            prepare_experiment_batch(
+                arguments.manifest,
+                arguments.output_root,
+                group_names=arguments.group,
+                task_ids=arguments.task,
+                limit=arguments.limit,
+            )
+        )
+
+        print("Dry run: True")
+        print(
+            f"Prepared runs: "
+            f"{payload['run_count']}"
+        )
+        print(f"Batch saved to: {batch_path}")
+        return
     if arguments.command == "plan-experiments":
         output_path, payload = write_experiment_plan(
             arguments.manifest,

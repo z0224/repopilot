@@ -304,3 +304,98 @@ def write_experiment_plan(
     )
 
     return output_path, payload
+def prepare_experiment_batch(
+    manifest_path,
+    output_root,
+    *,
+    group_names=None,
+    task_ids=None,
+    limit=None,
+):
+    plan = list(
+        build_experiment_plan(
+            manifest_path,
+            group_names,
+        )
+    )
+
+    if task_ids is not None:
+        task_ids = tuple(task_ids)
+        available_tasks = {
+            item.task_id
+            for item in plan
+        }
+        unknown_tasks = (
+            set(task_ids) - available_tasks
+        )
+
+        if unknown_tasks:
+            raise ValueError(
+                "unknown benchmark tasks: "
+                + ", ".join(sorted(unknown_tasks))
+            )
+
+        plan = [
+            item
+            for item in plan
+            if item.task_id in task_ids
+        ]
+
+    if limit is not None:
+        if limit < 1:
+            raise ValueError(
+                "experiment limit must be at least 1"
+            )
+
+        plan = plan[:limit]
+
+    if not plan:
+        raise ValueError(
+            "experiment selection is empty"
+        )
+
+    output_root = Path(
+        output_root
+    ).expanduser().resolve()
+
+    runs = []
+
+    for item in plan:
+        prepared = prepare_experiment_workspace(
+            manifest_path,
+            item.task_id,
+            item.group.name,
+            output_root,
+        )
+
+        runs.append({
+            "run_id": item.run_id,
+            "task_id": item.task_id,
+            "group": item.group.name,
+            "use_rag": item.group.use_rag,
+            "use_safety_requirements": (
+                item.group.use_safety_requirements
+            ),
+            "workspace": str(prepared.workspace),
+            "status": "prepared",
+        })
+
+    payload = {
+        "schema_version": 1,
+        "dry_run": True,
+        "run_count": len(runs),
+        "runs": runs,
+    }
+
+    batch_path = output_root / "batch.json"
+    batch_path.write_text(
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    return batch_path, payload
