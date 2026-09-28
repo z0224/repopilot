@@ -1,7 +1,16 @@
 """Execute one isolated RepoPilot experiment."""
 
 from __future__ import annotations
+from dataclasses import dataclass
 
+from .adapters import MiniSWEAgentAdapter
+from .context import build_context_bundle
+from .retrieval import (
+    DEFAULT_MODEL,
+    HybridRetriever,
+    SentenceTransformerEmbedder,
+    index_repository,
+)
 import json
 from pathlib import Path
 
@@ -38,6 +47,74 @@ def _write_result(workspace, payload):
 
     return result_path
 
+@dataclass(frozen=True)
+class ExperimentRuntime:
+    adapter: MiniSWEAgentAdapter
+    context: object | None
+    retrieved_chunks: int
+
+
+def build_experiment_runtime(
+    prepared: PreparedExperiment,
+    *,
+    mini_executable="mini",
+    agent_model=None,
+    config_paths=("mini.yaml",),
+    embedding_model=DEFAULT_MODEL,
+    top_k=5,
+    max_chars=12000,
+    context_factory=None,
+):
+    adapter = MiniSWEAgentAdapter(
+        executable=mini_executable,
+        config_paths=config_paths,
+        model=agent_model,
+        include_safety_requirements=(
+            prepared.group.use_safety_requirements
+        ),
+    )
+
+    if not prepared.group.use_rag:
+        return ExperimentRuntime(
+            adapter=adapter,
+            context=None,
+            retrieved_chunks=0,
+        )
+
+    if context_factory is not None:
+        context = context_factory(prepared)
+    else:
+        index = index_repository(
+            prepared.workspace
+        )
+        embedder = SentenceTransformerEmbedder(
+            model_name=embedding_model,
+        )
+        retriever = HybridRetriever(
+            index.chunks,
+            embedder,
+        )
+        results = retriever.search(
+            prepared.task,
+            top_k=top_k,
+        )
+        context = build_context_bundle(
+            prepared.task,
+            results,
+            max_chars=max_chars,
+            max_chunks=top_k,
+        )
+
+    if context is None:
+        raise ValueError(
+            "RAG experiment requires a context bundle"
+        )
+
+    return ExperimentRuntime(
+        adapter=adapter,
+        context=context,
+        retrieved_chunks=len(context.items),
+    )
 
 def execute_prepared_experiment(
     prepared: PreparedExperiment,

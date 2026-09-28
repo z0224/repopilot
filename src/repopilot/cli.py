@@ -4,7 +4,7 @@ import argparse
 import json
 import shlex
 from pathlib import Path
-
+from .execution import build_experiment_runtime
 from .adapters import MiniSWEAgentAdapter
 from .audit import verify
 from .context import build_context_bundle
@@ -26,6 +26,7 @@ from .experiments import (
     prepare_experiment_workspace,
     write_experiment_plan,
     prepare_experiment_batch,
+    run_experiment_baseline,
 )
 
 def positive_int(value):
@@ -375,11 +376,191 @@ def build_parser():
         action="store_true",
         help="Prepare workspaces without running agents.",
     )
+    single_parser = subparsers.add_parser(
+        "run-one-experiment",
+        help="Prepare and preview one experiment run.",
+    )
+    single_parser.add_argument(
+        "manifest",
+        help="Path to the benchmark manifest.",
+    )
+    single_parser.add_argument(
+        "--task",
+        required=True,
+        help="Benchmark task id.",
+    )
+    single_parser.add_argument(
+        "--group",
+        required=True,
+        choices=tuple(EXPERIMENT_GROUPS),
+        help="Experiment group.",
+    )
+    single_parser.add_argument(
+        "--output-root",
+        required=True,
+        help="Root directory for experiment output.",
+    )
+    single_parser.add_argument(
+        "--mini-executable",
+        default="mini",
+    )
+    single_parser.add_argument(
+        "--agent-model",
+    )
+    single_parser.add_argument(
+        "--embedding-model",
+        default=DEFAULT_MODEL,
+    )
+    single_parser.add_argument(
+        "--top-k",
+        type=positive_int,
+        default=5,
+    )
+    single_parser.add_argument(
+        "--max-chars",
+        type=positive_int,
+        default=12000,
+    )
+    single_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Write the prompt and command without running.",
+    )
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+    if arguments.command == "run-one-experiment":
+        if not arguments.dry_run:
+            raise SystemExit(
+                "run-one-experiment currently requires "
+                "--dry-run"
+            )
+
+        prepared = prepare_experiment_workspace(
+            arguments.manifest,
+            arguments.task,
+            arguments.group,
+            arguments.output_root,
+        )
+        baseline = run_experiment_baseline(
+            prepared
+        )
+
+        if not baseline.matches_expected:
+            print("Baseline verified: False")
+            raise SystemExit(2)
+
+        runtime = build_experiment_runtime(
+            prepared,
+            mini_executable=(
+                arguments.mini_executable
+            ),
+            agent_model=arguments.agent_model,
+            embedding_model=(
+                arguments.embedding_model
+            ),
+            top_k=arguments.top_k,
+            max_chars=arguments.max_chars,
+        )
+
+        state_directory = (
+            prepared.workspace / ".repopilot"
+        )
+        state_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        trajectory_path = (
+            state_directory / "agent.traj.json"
+        )
+        prompt_path = (
+            state_directory / "agent.context.md"
+        )
+        preview_path = (
+            state_directory / "run-preview.json"
+        )
+
+        prompt = runtime.adapter.build_prompt(
+            prepared.task,
+            runtime.context,
+        )
+        prompt_path.write_text(
+            prompt,
+            encoding="utf-8",
+        )
+
+        command = runtime.adapter.build_command(
+            prompt,
+            trajectory_path,
+        )
+        preview = {
+            "schema_version": 1,
+            "dry_run": True,
+            "run_id": (
+                f"{prepared.task_id}__"
+                f"{prepared.group.name}"
+            ),
+            "group": prepared.group.name,
+            "use_rag": prepared.group.use_rag,
+            "use_safety_requirements": (
+                prepared.group
+                .use_safety_requirements
+            ),
+            "baseline": baseline.to_dict(),
+            "retrieved_chunks": (
+                runtime.retrieved_chunks
+            ),
+            "prompt_path": str(prompt_path),
+            "trajectory_path": str(
+                trajectory_path
+            ),
+            "command": list(command),
+        }
+        preview_path.write_text(
+            json.dumps(
+                preview,
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        printable_command = list(command)
+        task_position = (
+            printable_command.index("--task") + 1
+        )
+        printable_command[task_position] = (
+            f"<prompt saved to {prompt_path}>"
+        )
+
+        print("Dry run: True")
+        print(
+            f"Run: {preview['run_id']}"
+        )
+        print("Baseline verified: True")
+        print(
+            f"Use RAG: "
+            f"{prepared.group.use_rag}"
+        )
+        print(
+            "Use safety requirements: "
+            f"{prepared.group.use_safety_requirements}"
+        )
+        print(
+            f"Retrieved chunks: "
+            f"{runtime.retrieved_chunks}"
+        )
+        print(f"Prompt saved to: {prompt_path}")
+        print(
+            "Command: "
+            + shlex.join(printable_command)
+        )
+        print(f"Preview saved to: {preview_path}")
+        return
     if arguments.command == "run-experiments":
         if not arguments.dry_run:
             raise SystemExit(
