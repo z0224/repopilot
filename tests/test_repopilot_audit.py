@@ -206,6 +206,52 @@ def test_recognizes_guarded_targeted_rewrite(tmp_path):
     assert len(result["targeted_rewrite_operations"]) == 1
 
 
+def test_recognizes_unique_guard_without_replace_limit(
+    tmp_path,
+):
+    trajectory = {
+        "messages": [
+            {
+                "role": "assistant",
+                "extra": {
+                    "actions": [
+                        {
+                            "command": (
+                                "python - <<'PY'\n"
+                                "from pathlib import Path\n"
+                                "path = Path('safe_divide.py')\n"
+                                "text = path.read_text()\n"
+                                "old = 'return a / b'\n"
+                                "new = 'return guarded_divide'\n"
+                                "if text.count(old) != 1:\n"
+                                "    raise SystemExit('bad count')\n"
+                                "path.write_text("
+                                "text.replace(old, new))\n"
+                                "PY"
+                            )
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+
+    assert result["overwrite_operations"] == []
+    assert len(result["targeted_rewrite_operations"]) == 1
+    assert (
+        result["targeted_rewrite_operations"][0]
+        ["operation_type"]
+        == "targeted_write_text"
+    )
+
+
 def test_treats_tmp_cat_redirect_as_temporary(tmp_path):
     trajectory = {
         "messages": [

@@ -37,8 +37,23 @@ def classify_write_text(command):
             command,
         )
     )
+    replaces_text = bool(
+        re.search(r"\.replace\s*\(", command)
+    )
+    guards_unique_target = bool(
+        re.search(
+            r"\.count\s*\([^()\n]*\)\s*!=\s*1",
+            command,
+        )
+    )
 
-    if reads_existing_file and replaces_once:
+    if reads_existing_file and (
+        replaces_once
+        or (
+            replaces_text
+            and guards_unique_target
+        )
+    ):
         return "targeted_write_text"
 
     return "path_write_text"
