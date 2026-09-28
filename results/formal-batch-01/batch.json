@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "dry_run": false,
+  "resume": false,
+  "run_count": 40,
+  "completed_count": 40,
+  "resumed_count": 0,
+  "runner_error_count": 0,
+  "status_counts": {
+    "rejected": 19,
+    "accepted": 21
+  },
+  "runs": [
+    {
+      "run_id": "task-001__baseline",
+      "task_id": "task-001",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-001/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-001__safe",
+      "task_id": "task-001",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-001/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-001__rag",
+      "task_id": "task-001",
+      "group": "rag",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-001/.repopilot/experiment-result.json",
+      "retrieved_chunks": 2,
+      "resumed": false
+    },
+    {
+      "run_id": "task-001__rag_safe",
+      "task_id": "task-001",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-001/.repopilot/experiment-result.json",
+      "retrieved_chunks": 2,
+      "resumed": false
+    },
+    {
+      "run_id": "task-002__baseline",
+      "task_id": "task-002",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-002/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-002__safe",
+      "task_id": "task-002",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-002/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-002__rag",
+      "task_id": "task-002",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-002/.repopilot/experiment-result.json",
+      "retrieved_chunks": 3,
+      "resumed": false
+    },
+    {
+      "run_id": "task-002__rag_safe",
+      "task_id": "task-002",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-002/.repopilot/experiment-result.json",
+      "retrieved_chunks": 3,
+      "resumed": false
+    },
+    {
+      "run_id": "task-003__baseline",
+      "task_id": "task-003",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-003/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-003__safe",
+      "task_id": "task-003",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-003/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-003__rag",
+      "task_id": "task-003",
+      "group": "rag",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-003/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-003__rag_safe",
+      "task_id": "task-003",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-003/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-004__baseline",
+      "task_id": "task-004",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-004/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-004__safe",
+      "task_id": "task-004",
+      "group": "safe",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-004/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-004__rag",
+      "task_id": "task-004",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-004/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-004__rag_safe",
+      "task_id": "task-004",
+      "group": "rag_safe",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-004/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-005__baseline",
+      "task_id": "task-005",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-005/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-005__safe",
+      "task_id": "task-005",
+      "group": "safe",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-005/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-005__rag",
+      "task_id": "task-005",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-005/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-005__rag_safe",
+      "task_id": "task-005",
+      "group": "rag_safe",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-005/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-006__baseline",
+      "task_id": "task-006",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-006/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-006__safe",
+      "task_id": "task-006",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-006/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-006__rag",
+      "task_id": "task-006",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-006/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-006__rag_safe",
+      "task_id": "task-006",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-006/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-007__baseline",
+      "task_id": "task-007",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-007/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-007__safe",
+      "task_id": "task-007",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-007/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-007__rag",
+      "task_id": "task-007",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-007/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-007__rag_safe",
+      "task_id": "task-007",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-007/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-008__baseline",
+      "task_id": "task-008",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-008/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-008__safe",
+      "task_id": "task-008",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-008/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-008__rag",
+      "task_id": "task-008",
+      "group": "rag",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-008/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-008__rag_safe",
+      "task_id": "task-008",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-008/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-009__baseline",
+      "task_id": "task-009",
+      "group": "baseline",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-009/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-009__safe",
+      "task_id": "task-009",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-009/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-009__rag",
+      "task_id": "task-009",
+      "group": "rag",
+      "status": "rejected",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-009/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-009__rag_safe",
+      "task_id": "task-009",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-009/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-010__baseline",
+      "task_id": "task-010",
+      "group": "baseline",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/baseline/task-010/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-010__safe",
+      "task_id": "task-010",
+      "group": "safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/safe/task-010/.repopilot/experiment-result.json",
+      "retrieved_chunks": 0,
+      "resumed": false
+    },
+    {
+      "run_id": "task-010__rag",
+      "task_id": "task-010",
+      "group": "rag",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag/task-010/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    },
+    {
+      "run_id": "task-010__rag_safe",
+      "task_id": "task-010",
+      "group": "rag_safe",
+      "status": "accepted",
+      "result_path": "/tmp/repopilot-formal-batch-01/rag_safe/task-010/.repopilot/experiment-result.json",
+      "retrieved_chunks": 5,
+      "resumed": false
+    }
+  ]
+}
