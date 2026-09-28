@@ -4,7 +4,10 @@ import argparse
 import json
 import shlex
 from pathlib import Path
-from .execution import build_experiment_runtime
+from .execution import (
+    build_experiment_runtime,
+    execute_prepared_experiment,
+)
 from .adapters import MiniSWEAgentAdapter
 from .audit import verify
 from .context import build_context_bundle
@@ -426,17 +429,16 @@ def build_parser():
         action="store_true",
         help="Write the prompt and command without running.",
     )
+    single_parser.add_argument(
+        "--policy",
+        help="Optional RepoPilot policy YAML path.",
+    )
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
     if arguments.command == "run-one-experiment":
-        if not arguments.dry_run:
-            raise SystemExit(
-                "run-one-experiment currently requires "
-                "--dry-run"
-            )
 
         prepared = prepare_experiment_workspace(
             arguments.manifest,
@@ -464,7 +466,29 @@ def main():
             top_k=arguments.top_k,
             max_chars=arguments.max_chars,
         )
+        if not arguments.dry_run:
+            result_path, payload = (
+                execute_prepared_experiment(
+                    prepared,
+                    runtime.adapter,
+                    context=runtime.context,
+                    policy_path=arguments.policy,
+                )
+            )
 
+            print(
+                f"Experiment status: "
+                f"{payload['status']}"
+            )
+            print(
+                f"Result saved to: "
+                f"{result_path}"
+            )
+
+            if payload["status"] != "accepted":
+                raise SystemExit(1)
+
+            return
         state_directory = (
             prepared.workspace / ".repopilot"
         )

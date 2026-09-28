@@ -254,3 +254,73 @@ def test_run_one_experiment_cli_dry_run(
         / ".repopilot"
         / "agent.traj.json"
     ).exists()
+def test_run_one_experiment_with_fake_executable(
+    tmp_path,
+):
+    fake_agent = tmp_path / "fake-mini"
+    fake_agent.write_text(
+        f"""#!{sys.executable}
+from pathlib import Path
+
+path = Path("calculator.py")
+source = path.read_text(encoding="utf-8")
+path.write_text(
+    source.replace(
+        "return a - b",
+        "return a + b",
+        1,
+    ),
+    encoding="utf-8",
+)
+""",
+        encoding="utf-8",
+    )
+    fake_agent.chmod(0o755)
+
+    output_root = tmp_path / "runs"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "repopilot",
+            "run-one-experiment",
+            str(MANIFEST),
+            "--task",
+            "task-001",
+            "--group",
+            "baseline",
+            "--output-root",
+            str(output_root),
+            "--mini-executable",
+            str(fake_agent),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    workspace = (
+        output_root / "baseline" / "task-001"
+    )
+    result_path = (
+        workspace
+        / ".repopilot"
+        / "experiment-result.json"
+    )
+
+    assert result.returncode == 0
+    assert "Experiment status: accepted" in (
+        result.stdout
+    )
+    assert result_path.is_file()
+
+    payload = json.loads(
+        result_path.read_text(encoding="utf-8")
+    )
+
+    assert payload["status"] == "accepted"
+    assert payload["agent"]["succeeded"] is True
+    assert payload["verification"][
+        "final_test"
+    ]["returncode"] == 0
