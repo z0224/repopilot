@@ -6,6 +6,7 @@ import shlex
 from pathlib import Path
 from .execution import (
     build_experiment_runtime,
+    execute_experiment_batch,
     execute_prepared_experiment,
 )
 from .adapters import MiniSWEAgentAdapter
@@ -381,6 +382,40 @@ def build_parser():
         action="store_true",
         help="Prepare workspaces without running agents.",
     )
+    batch_parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Reuse completed results in the output root.",
+    )
+    batch_parser.add_argument(
+        "--mini-executable",
+        default="mini",
+    )
+    batch_parser.add_argument(
+        "--agent-model",
+    )
+    batch_parser.add_argument(
+        "--agent-model-class",
+        default="litellm_response",
+    )
+    batch_parser.add_argument(
+        "--embedding-model",
+        default=DEFAULT_MODEL,
+    )
+    batch_parser.add_argument(
+        "--top-k",
+        type=positive_int,
+        default=5,
+    )
+    batch_parser.add_argument(
+        "--max-chars",
+        type=positive_int,
+        default=12000,
+    )
+    batch_parser.add_argument(
+        "--policy",
+        help="Optional RepoPilot policy YAML path.",
+    )
     single_parser = subparsers.add_parser(
         "run-one-experiment",
         help="Prepare and preview one experiment run.",
@@ -630,36 +665,76 @@ def main():
         print(f"Preview saved to: {preview_path}")
         return
     if arguments.command == "run-experiments":
-        if not arguments.dry_run:
-            raise SystemExit(
-                "run-experiments currently requires "
-                "--dry-run"
+        if arguments.dry_run:
+            batch_path, payload = (
+                prepare_experiment_batch(
+                    arguments.manifest,
+                    arguments.output_root,
+                    group_names=arguments.group,
+                    task_ids=arguments.task,
+                    limit=arguments.limit,
+                )
             )
 
-        batch_path, payload = (
-            prepare_experiment_batch(
-                arguments.manifest,
-                arguments.output_root,
-                group_names=arguments.group,
-                task_ids=arguments.task,
-                limit=arguments.limit,
+            print("Dry run: True")
+            print(
+                f"Prepared runs: "
+                f"{payload['run_count']}"
             )
-        )
+            print(
+                "Baseline verified: "
+                f"{payload['baseline_verified_count']}"
+            )
+            print(
+                "Baseline mismatches: "
+                f"{payload['baseline_mismatch_count']}"
+            )
+            print(f"Batch saved to: {batch_path}")
+            return
 
-        print("Dry run: True")
+        batch_path, payload = execute_experiment_batch(
+            arguments.manifest,
+            arguments.output_root,
+            group_names=arguments.group,
+            task_ids=arguments.task,
+            limit=arguments.limit,
+            mini_executable=arguments.mini_executable,
+            agent_model=arguments.agent_model,
+            agent_model_class=(
+                arguments.agent_model_class
+            ),
+            embedding_model=arguments.embedding_model,
+            top_k=arguments.top_k,
+            max_chars=arguments.max_chars,
+            policy_path=arguments.policy,
+            resume=arguments.resume,
+        )
+        print("Dry run: False")
+        print(f"Runs attempted: {payload['run_count']}")
         print(
-            f"Prepared runs: "
-            f"{payload['run_count']}"
+            f"Runs completed: "
+            f"{payload['completed_count']}"
         )
         print(
-            "Baseline verified: "
-            f"{payload['baseline_verified_count']}"
+            f"Runner errors: "
+            f"{payload['runner_error_count']}"
         )
         print(
-            "Baseline mismatches: "
-            f"{payload['baseline_mismatch_count']}"
+            "Statuses: "
+            + json.dumps(
+                payload["status_counts"],
+                sort_keys=True,
+            )
         )
         print(f"Batch saved to: {batch_path}")
+
+        if payload["completed_count"]:
+            summary_path, _ = write_experiment_summary(
+                arguments.output_root,
+                Path(arguments.output_root)
+                / "summary.json",
+            )
+            print(f"Summary saved to: {summary_path}")
         return
     if arguments.command == "plan-experiments":
         output_path, payload = write_experiment_plan(

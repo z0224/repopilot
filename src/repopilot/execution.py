@@ -17,6 +17,8 @@ from pathlib import Path
 from .audit import verify
 from .experiments import (
     PreparedExperiment,
+    build_experiment_plan,
+    prepare_experiment_workspace,
     run_experiment_baseline,
 )
 from .snapshot import start_baseline
@@ -237,3 +239,221 @@ def execute_prepared_experiment(
         payload,
     )
     return result_path, payload
+
+
+def _select_batch_plan(
+    manifest_path,
+    *,
+    group_names=None,
+    task_ids=None,
+    limit=None,
+):
+    plan = list(
+        build_experiment_plan(
+            manifest_path,
+            group_names,
+        )
+    )
+
+    if task_ids is not None:
+        requested_tasks = tuple(task_ids)
+        available_tasks = {
+            item.task_id for item in plan
+        }
+        unknown_tasks = (
+            set(requested_tasks) - available_tasks
+        )
+
+        if unknown_tasks:
+            raise ValueError(
+                "unknown benchmark tasks: "
+                + ", ".join(sorted(unknown_tasks))
+            )
+
+        plan = [
+            item
+            for item in plan
+            if item.task_id in requested_tasks
+        ]
+
+    if limit is not None:
+        if limit < 1:
+            raise ValueError(
+                "experiment limit must be at least 1"
+            )
+
+        plan = plan[:limit]
+
+    if not plan:
+        raise ValueError(
+            "experiment selection is empty"
+        )
+
+    return tuple(plan)
+
+
+def _write_batch_state(batch_path, runs, *, resume):
+    status_counts = {}
+
+    for run in runs:
+        status = run["status"]
+        status_counts[status] = (
+            status_counts.get(status, 0) + 1
+        )
+
+    payload = {
+        "schema_version": 1,
+        "dry_run": False,
+        "resume": bool(resume),
+        "run_count": len(runs),
+        "completed_count": sum(
+            bool(run.get("result_path"))
+            for run in runs
+        ),
+        "resumed_count": sum(
+            bool(run.get("resumed"))
+            for run in runs
+        ),
+        "runner_error_count": status_counts.get(
+            "runner_error",
+            0,
+        ),
+        "status_counts": status_counts,
+        "runs": runs,
+    }
+    batch_path.write_text(
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    return payload
+
+
+def execute_experiment_batch(
+    manifest_path,
+    output_root,
+    *,
+    group_names=None,
+    task_ids=None,
+    limit=None,
+    mini_executable="mini",
+    agent_model=None,
+    agent_model_class="litellm_response",
+    embedding_model=DEFAULT_MODEL,
+    top_k=5,
+    max_chars=12000,
+    policy_path=None,
+    resume=False,
+    runtime_factory=build_experiment_runtime,
+    executor=execute_prepared_experiment,
+):
+    """Execute selected experiments and persist progress after each run."""
+    plan = _select_batch_plan(
+        manifest_path,
+        group_names=group_names,
+        task_ids=task_ids,
+        limit=limit,
+    )
+    output_root = Path(
+        output_root
+    ).expanduser().resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    batch_path = output_root / "batch.json"
+    runs = []
+
+    for item in plan:
+        existing_result = (
+            output_root
+            / item.group.name
+            / item.task_id
+            / ".repopilot"
+            / "experiment-result.json"
+        )
+
+        if resume and existing_result.is_file():
+            existing_payload = json.loads(
+                existing_result.read_text(
+                    encoding="utf-8"
+                )
+            )
+            runs.append({
+                "run_id": item.run_id,
+                "task_id": item.task_id,
+                "group": item.group.name,
+                "status": existing_payload.get(
+                    "status",
+                    "unknown",
+                ),
+                "result_path": str(existing_result),
+                "resumed": True,
+            })
+            _write_batch_state(
+                batch_path,
+                runs,
+                resume=resume,
+            )
+            continue
+
+        try:
+            prepared = prepare_experiment_workspace(
+                manifest_path,
+                item.task_id,
+                item.group.name,
+                output_root,
+            )
+            runtime = runtime_factory(
+                prepared,
+                mini_executable=mini_executable,
+                agent_model=agent_model,
+                agent_model_class=agent_model_class,
+                embedding_model=embedding_model,
+                top_k=top_k,
+                max_chars=max_chars,
+            )
+            result_path, result = executor(
+                prepared,
+                runtime.adapter,
+                context=runtime.context,
+                policy_path=policy_path,
+            )
+            runs.append({
+                "run_id": item.run_id,
+                "task_id": item.task_id,
+                "group": item.group.name,
+                "status": result["status"],
+                "result_path": str(result_path),
+                "retrieved_chunks": (
+                    runtime.retrieved_chunks
+                ),
+                "resumed": False,
+            })
+        except Exception as error:
+            runs.append({
+                "run_id": item.run_id,
+                "task_id": item.task_id,
+                "group": item.group.name,
+                "status": "runner_error",
+                "result_path": None,
+                "resumed": False,
+                "error_type": type(error).__name__,
+                "error": str(error),
+            })
+
+        _write_batch_state(
+            batch_path,
+            runs,
+            resume=resume,
+        )
+
+    payload = _write_batch_state(
+        batch_path,
+        runs,
+        resume=resume,
+    )
+
+    return batch_path, payload
