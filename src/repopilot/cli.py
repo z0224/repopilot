@@ -212,6 +212,7 @@ def build_parser():
         "--agent-model",
         help="Optional mini-SWE-agent model override.",
     )
+
     run_parser.add_argument(
         "--mini-executable",
         default="mini",
@@ -411,6 +412,11 @@ def build_parser():
         "--agent-model",
     )
     single_parser.add_argument(
+        "--agent-model-class",
+        default="litellm_response",
+        help="mini-SWE-agent model adapter class.",
+    )
+    single_parser.add_argument(
         "--embedding-model",
         default=DEFAULT_MODEL,
     )
@@ -460,6 +466,9 @@ def main():
                 arguments.mini_executable
             ),
             agent_model=arguments.agent_model,
+            agent_model_class=(
+                arguments.agent_model_class
+            ),
             embedding_model=(
                 arguments.embedding_model
             ),

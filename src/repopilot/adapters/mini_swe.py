@@ -17,6 +17,7 @@ class MiniSWEAgentAdapter(AgentAdapter):
         executable="mini",
         config_paths=("mini.yaml",),
         model=None,
+        model_class=None,
         yolo=True,
         exit_immediately=True,
         runner=subprocess.run,
@@ -28,6 +29,7 @@ class MiniSWEAgentAdapter(AgentAdapter):
             for path in config_paths
         )
         self.model = model
+        self.model_class = model_class
         self.yolo = bool(yolo)
         self.exit_immediately = bool(
             exit_immediately
@@ -83,6 +85,11 @@ class MiniSWEAgentAdapter(AgentAdapter):
             command.extend([
                 "--model",
                 self.model,
+            ])
+        if self.model_class:
+            command.extend([
+                "--model-class",
+                self.model_class,
             ])
 
         command.extend([

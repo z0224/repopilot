@@ -32,6 +32,7 @@ def test_builds_mini_swe_agent_command(tmp_path):
             "configs/safe_patch.yaml",
         ),
         model="example/model",
+        model_class="litellm_response",
     )
 
     prompt = adapter.build_prompt(
@@ -51,7 +52,8 @@ def test_builds_mini_swe_agent_command(tmp_path):
     assert "--yolo" in command
     assert "--exit-immediately" in command
     assert "service.py::calculate_total" in prompt
-
+    assert "--model-class" in command
+    assert "litellm_response" in command
 
 def test_run_saves_exact_injected_context(tmp_path):
     captured = {}

@@ -59,6 +59,7 @@ def build_experiment_runtime(
     *,
     mini_executable="mini",
     agent_model=None,
+    agent_model_class="litellm_response",
     config_paths=("mini.yaml",),
     embedding_model=DEFAULT_MODEL,
     top_k=5,
@@ -69,6 +70,7 @@ def build_experiment_runtime(
         executable=mini_executable,
         config_paths=config_paths,
         model=agent_model,
+        model_class=agent_model_class,
         include_safety_requirements=(
             prepared.group.use_safety_requirements
         ),

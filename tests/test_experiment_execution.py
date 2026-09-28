@@ -181,6 +181,11 @@ def test_builds_rag_safe_runtime_with_context(
         runtime.adapter.include_safety_requirements
         is True
     )
+    assert (
+        runtime.adapter.model_class
+        == "litellm_response"
+
+    )
 def test_run_one_experiment_cli_dry_run(
     tmp_path,
 ):
