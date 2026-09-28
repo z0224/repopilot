@@ -3,6 +3,7 @@ import json
 import pytest
 
 from repopilot.summary import (
+    render_experiment_summary_html,
     render_experiment_summary_markdown,
     summarize_experiments,
     write_experiment_summary,
@@ -102,11 +103,13 @@ def test_writes_summary_json(tmp_path):
         runs,
         tmp_path / "summary.json",
         tmp_path / "summary.md",
+        tmp_path / "summary.html",
     )
 
     assert output_path.is_file()
     assert json.loads(output_path.read_text()) == payload
     assert (tmp_path / "summary.md").is_file()
+    assert (tmp_path / "summary.html").is_file()
 
 
 def test_renders_group_and_task_tables(tmp_path):
@@ -126,6 +129,26 @@ def test_renders_group_and_task_tables(tmp_path):
     assert "| Safe | 1 | 100.0% | 100.0%" in markdown
     assert "| task-001 | — | Accepted | — | — |" in markdown
     assert "These measurements describe only" in markdown
+
+
+def test_renders_self_contained_html(tmp_path):
+    write_run(
+        tmp_path,
+        "rag-safe",
+        group="rag_safe",
+        status="accepted",
+        api_calls=4,
+        cost=0.2,
+    )
+    payload = summarize_experiments(tmp_path)
+
+    html = render_experiment_summary_html(payload)
+
+    assert html.startswith("<!doctype html>")
+    assert "<style>" in html
+    assert "RAG + Safe" in html
+    assert "Task acceptance matrix" in html
+    assert "https://" not in html
 
 
 def test_rejects_directory_without_results(tmp_path):

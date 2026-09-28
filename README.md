@@ -99,6 +99,7 @@ the right code does not automatically guarantee a safe editing strategy.
 See the [machine-readable summary](results/formal-batch-01/summary.json),
 [Markdown report](results/formal-batch-01/summary.md), and
 [representative trajectories](results/formal-batch-01/examples/task-002).
+The same summary can also be exported as a self-contained HTML dashboard.
 
 ## Installation
 
@@ -246,7 +247,8 @@ Summarize a completed batch:
 ```bash
 repopilot summarize /tmp/repopilot-formal-batch \
   --output results/summary.json \
-  --markdown results/summary.md
+  --markdown results/summary.md \
+  --html results/summary.html
 ```
 
 ## Policies

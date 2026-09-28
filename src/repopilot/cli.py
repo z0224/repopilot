@@ -496,6 +496,10 @@ def build_parser():
         "--markdown",
         help="Optional Markdown summary output path.",
     )
+    summary_parser.add_argument(
+        "--html",
+        help="Optional self-contained HTML output path.",
+    )
     return parser
 
 
@@ -506,6 +510,7 @@ def main():
             arguments.root,
             arguments.output,
             arguments.markdown,
+            arguments.html,
         )
         overall = payload["overall"]
         print(f"Runs: {payload['run_count']}")
@@ -526,6 +531,11 @@ def main():
             print(
                 "Markdown saved to: "
                 f"{Path(arguments.markdown).expanduser().resolve()}"
+            )
+        if arguments.html:
+            print(
+                "HTML saved to: "
+                f"{Path(arguments.html).expanduser().resolve()}"
             )
         return
     if arguments.command == "run-one-experiment":
@@ -749,6 +759,8 @@ def main():
                 / "summary.json",
                 Path(arguments.output_root)
                 / "summary.md",
+                Path(arguments.output_root)
+                / "summary.html",
             )
             print(f"Summary saved to: {summary_path}")
         return
