@@ -92,10 +92,6 @@ model backend and the same Strict policy.
 All 40 runs passed their final tests, but only 21 satisfied every Strict policy
 rule. This is the central distinction RepoPilot is designed to expose.
 
-[![RepoPilot formal evaluation dashboard](docs/assets/formal-results-dashboard.png)](results/formal-batch-01/summary.html)
-
-Click the dashboard to open the self-contained HTML report.
-
 The experiment does **not** establish that RAG improves repair success: all
 four groups achieved 100% on these small tasks. It does show that retrieving
 the right code does not automatically guarantee a safe editing strategy.
