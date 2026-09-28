@@ -21,7 +21,10 @@ from .retrieval import (
 )
 from .snapshot import start_baseline
 from .trajectory import parse_trajectory
-
+from .experiments import (
+    EXPERIMENT_GROUPS,
+    prepare_experiment_workspace,
+)
 
 def positive_int(value):
     try:
@@ -274,13 +277,53 @@ def build_parser():
         default=DEFAULT_MODEL,
         help="Sentence-transformers model for semantic retrieval.",
     )
-
+    experiment_parser = subparsers.add_parser(
+        "prepare-experiment",
+        help="Prepare an isolated buggy benchmark workspace.",
+    )
+    experiment_parser.add_argument(
+        "manifest",
+        help="Path to the benchmark manifest.",
+    )
+    experiment_parser.add_argument(
+        "--task",
+        required=True,
+        help="Benchmark task id.",
+    )
+    experiment_parser.add_argument(
+        "--group",
+        required=True,
+        choices=tuple(EXPERIMENT_GROUPS),
+        help="Experiment group.",
+    )
+    experiment_parser.add_argument(
+        "--output-root",
+        required=True,
+        help="Root directory for experiment workspaces.",
+    )
     return parser
 
 
 def main():
     arguments = build_parser().parse_args()
+    if arguments.command == "prepare-experiment":
+        prepared = prepare_experiment_workspace(
+            arguments.manifest,
+            arguments.task,
+            arguments.group,
+            arguments.output_root,
+        )
 
+        print(f"Task: {prepared.task_id}")
+        print(f"Group: {prepared.group.name}")
+        print(f"Use RAG: {prepared.group.use_rag}")
+        print(
+            "Use safety requirements: "
+            f"{prepared.group.use_safety_requirements}"
+        )
+        print(f"Workspace: {prepared.workspace}")
+        print(f"Test command: {prepared.test_command}")
+        return
     if arguments.command == "inspect-trajectory":
         trajectory = parse_trajectory(
             arguments.trajectory
