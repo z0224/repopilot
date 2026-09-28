@@ -16,7 +16,7 @@ from .trajectory import parse_trajectory
 
 
 OVERWRITE_PATTERNS = {
-    "cat_redirect": re.compile(r"\bcat\b[^\n]*(?:>{1}(?!>)|<<)"),
+    "cat_redirect": re.compile(r"\bcat\b[^\n;&|]*?(?<![>\d])>(?!>)"),
     "open_write_mode": re.compile(
         r"\bopen\s*\([^)]*,\s*['\"]w['\"]"
     ),
@@ -62,7 +62,8 @@ def is_temporary_cat_redirect(command):
     """Return True when cat writes only to a temporary path."""
     return bool(
         re.search(
-            r"\bcat\b[^\n]*>\s*['\"]?/(?:tmp|var/tmp)/",
+            r"\bcat\b[^\n;&|]*?(?<![>\d])>(?!>)"
+            r"\s*['\"]?/(?:tmp|var/tmp)/",
             command,
         )
     )

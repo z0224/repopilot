@@ -132,6 +132,39 @@ def test_ignores_prompt_examples_and_read_only_cat(tmp_path):
     assert result["commands_checked"] == 1
     assert result["overwrite_operations"] == []
 
+def test_ignores_read_only_cat_before_later_heredoc(
+    tmp_path,
+):
+    trajectory = {
+        "messages": [
+            {
+                "role": "assistant",
+                "extra": {
+                    "actions": [
+                        {
+                            "command": (
+                                "cat calculator.py && "
+                                "python - <<'PY'\n"
+                                "print('validation')\n"
+                                "PY"
+                            )
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(
+        json.dumps(trajectory),
+        encoding="utf-8",
+    )
+
+    result = audit_trajectory(trajectory_path)
+
+    assert result["overwrite_operations"] == []
+    assert result["temporary_file_operations"] == []
 
 def test_recognizes_guarded_targeted_rewrite(tmp_path):
     trajectory = {
