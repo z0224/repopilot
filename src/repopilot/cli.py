@@ -488,6 +488,10 @@ def build_parser():
         required=True,
         help="Summary JSON output path.",
     )
+    summary_parser.add_argument(
+        "--markdown",
+        help="Optional Markdown summary output path.",
+    )
     return parser
 
 
@@ -497,6 +501,7 @@ def main():
         output_path, payload = write_experiment_summary(
             arguments.root,
             arguments.output,
+            arguments.markdown,
         )
         overall = payload["overall"]
         print(f"Runs: {payload['run_count']}")
@@ -513,6 +518,11 @@ def main():
         )
         print(f"Total cost: {overall['total_cost']:.8f}")
         print(f"Summary saved to: {output_path}")
+        if arguments.markdown:
+            print(
+                "Markdown saved to: "
+                f"{Path(arguments.markdown).expanduser().resolve()}"
+            )
         return
     if arguments.command == "run-one-experiment":
 
@@ -733,6 +743,8 @@ def main():
                 arguments.output_root,
                 Path(arguments.output_root)
                 / "summary.json",
+                Path(arguments.output_root)
+                / "summary.md",
             )
             print(f"Summary saved to: {summary_path}")
         return

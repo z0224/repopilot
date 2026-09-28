@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 from pathlib import Path
 
 
@@ -47,6 +48,7 @@ def _load_run(result_path):
     final_test = verification.get("final_test") or {}
     audit = verification.get("trajectory_audit") or {}
     status_counts = audit.get("event_status_counts") or {}
+    policy = verification.get("policy") or {}
     api_calls, cost = _trajectory_stats(result_path)
 
     return {
@@ -55,6 +57,9 @@ def _load_run(result_path):
         "task_id": payload.get("task_id"),
         "group": payload.get("group"),
         "status": payload.get("status"),
+        "rejection_reasons": list(
+            policy.get("rejection_reasons") or []
+        ),
         "repair_succeeded": final_test.get("returncode") == 0,
         "accepted": payload.get("status") == "accepted",
         "test_files_modified": bool(
@@ -158,6 +163,11 @@ def summarize_experiments(root):
         )
 
     runs = [_load_run(path) for path in result_paths]
+
+    for run, path in zip(runs, result_paths):
+        run["result_path"] = str(
+            path.relative_to(root_path)
+        )
     groups = {}
 
     for group in GROUP_ORDER:
@@ -178,7 +188,157 @@ def summarize_experiments(root):
     }
 
 
-def write_experiment_summary(root, output):
+def _percentage(value):
+    return f"{value * 100:.1f}%"
+
+
+def render_experiment_summary_markdown(payload):
+    overall = payload["overall"]
+    lines = [
+        "# RepoPilot Experiment Summary",
+        "",
+        "## Overall",
+        "",
+        f"- Runs: {overall['run_count']}",
+        (
+            "- Repair success rate: "
+            + _percentage(
+                overall["repair_success_rate"]
+            )
+        ),
+        (
+            "- Policy acceptance rate: "
+            + _percentage(
+                overall["policy_acceptance_rate"]
+            )
+        ),
+        f"- Total API calls: {overall['total_api_calls']}",
+        f"- Total model cost: ${overall['total_cost']:.5f}",
+        "",
+        "## Group Comparison",
+        "",
+        (
+            "| Group | Runs | Repair | Acceptance | "
+            "Unsafe overwrite | Temporary files | "
+            "Test modification | API calls | Cost |"
+        ),
+        (
+            "|---|---:|---:|---:|---:|---:|---:|"
+            "---:|---:|"
+        ),
+    ]
+    labels = {
+        "baseline": "Baseline",
+        "safe": "Safe",
+        "rag": "RAG",
+        "rag_safe": "RAG + Safe",
+    }
+
+    for group in GROUP_ORDER:
+        metrics = payload["groups"].get(group)
+
+        if metrics is None:
+            continue
+
+        lines.append(
+            "| "
+            + " | ".join([
+                labels[group],
+                str(metrics["run_count"]),
+                _percentage(
+                    metrics["repair_success_rate"]
+                ),
+                _percentage(
+                    metrics["policy_acceptance_rate"]
+                ),
+                _percentage(
+                    metrics["unsafe_overwrite_rate"]
+                ),
+                _percentage(
+                    metrics["temporary_file_rate"]
+                ),
+                _percentage(
+                    metrics["test_modification_rate"]
+                ),
+                str(metrics["total_api_calls"]),
+                f"${metrics['total_cost']:.5f}",
+            ])
+            + " |"
+        )
+
+    lines.extend([
+        "",
+        "## Task Acceptance Matrix",
+        "",
+        "| Task | Baseline | Safe | RAG | RAG + Safe |",
+        "|---|---|---|---|---|",
+    ])
+    task_ids = sorted({
+        run["task_id"]
+        for run in payload["runs"]
+        if run["task_id"] is not None
+    })
+    lookup = {
+        (run["task_id"], run["group"]): run
+        for run in payload["runs"]
+    }
+
+    for task_id in task_ids:
+        cells = []
+
+        for group in GROUP_ORDER:
+            run = lookup.get((task_id, group))
+
+            if run is None:
+                cells.append("—")
+            elif run["accepted"]:
+                cells.append("Accepted")
+            else:
+                cells.append(run["status"].replace("_", " ").title())
+
+        lines.append(
+            f"| {task_id} | "
+            + " | ".join(cells)
+            + " |"
+        )
+
+    reason_counts = Counter(
+        reason
+        for run in payload["runs"]
+        for reason in run["rejection_reasons"]
+    )
+    lines.extend([
+        "",
+        "## Rejection Reasons",
+        "",
+    ])
+
+    if reason_counts:
+        for reason, count in reason_counts.most_common():
+            lines.append(f"- {reason}: {count}")
+    else:
+        lines.append("- None")
+
+    lines.extend([
+        "",
+        "## Scope",
+        "",
+        (
+            "These measurements describe only the recorded "
+            "benchmark runs in this summary. They do not establish "
+            "general model performance or causal improvements."
+        ),
+        "",
+    ])
+
+    return "\n".join(lines)
+
+
+def write_experiment_summary(
+    root,
+    output,
+    markdown_output=None,
+):
     payload = summarize_experiments(root)
     output_path = Path(output).expanduser().resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -186,5 +346,18 @@ def write_experiment_summary(root, output):
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+    if markdown_output is not None:
+        markdown_path = Path(
+            markdown_output
+        ).expanduser().resolve()
+        markdown_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        markdown_path.write_text(
+            render_experiment_summary_markdown(payload),
+            encoding="utf-8",
+        )
 
     return output_path, payload

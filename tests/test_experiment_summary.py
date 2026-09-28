@@ -3,6 +3,7 @@ import json
 import pytest
 
 from repopilot.summary import (
+    render_experiment_summary_markdown,
     summarize_experiments,
     write_experiment_summary,
 )
@@ -100,10 +101,31 @@ def test_writes_summary_json(tmp_path):
     output_path, payload = write_experiment_summary(
         runs,
         tmp_path / "summary.json",
+        tmp_path / "summary.md",
     )
 
     assert output_path.is_file()
     assert json.loads(output_path.read_text()) == payload
+    assert (tmp_path / "summary.md").is_file()
+
+
+def test_renders_group_and_task_tables(tmp_path):
+    write_run(
+        tmp_path,
+        "safe",
+        group="safe",
+        status="accepted",
+        api_calls=3,
+        cost=0.1,
+    )
+    payload = summarize_experiments(tmp_path)
+
+    markdown = render_experiment_summary_markdown(payload)
+
+    assert "# RepoPilot Experiment Summary" in markdown
+    assert "| Safe | 1 | 100.0% | 100.0%" in markdown
+    assert "| task-001 | — | Accepted | — | — |" in markdown
+    assert "These measurements describe only" in markdown
 
 
 def test_rejects_directory_without_results(tmp_path):
